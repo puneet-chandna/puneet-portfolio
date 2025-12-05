@@ -1,11 +1,43 @@
-import { Suspense } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
+import { Suspense, useRef, useEffect } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { PerspectiveCamera } from '@react-three/drei'
 import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
 import ParticleField from './ParticleField'
 import TronGrid from './TronGrid'
 import GlowingOrbs from './GlowingOrbs'
+
+// Mouse parallax camera controller
+function CameraController() {
+  const { camera } = useThree()
+  const mouseRef = useRef({ x: 0, y: 0 })
+  const targetRef = useRef({ x: 0, y: 0 })
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      mouseRef.current.x = (e.clientX / window.innerWidth - 0.5) * 2
+      mouseRef.current.y = (e.clientY / window.innerHeight - 0.5) * 2
+    }
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [])
+
+  useFrame(() => {
+    // Smooth lerp towards mouse position
+    targetRef.current.x += (mouseRef.current.x - targetRef.current.x) * 0.05
+    targetRef.current.y += (mouseRef.current.y - targetRef.current.y) * 0.05
+
+    // Apply parallax to camera position using set()
+    camera.position.set(
+      targetRef.current.x * 3,
+      5 - targetRef.current.y * 2,
+      20
+    )
+    camera.lookAt(0, 0, 0)
+  })
+
+  return null
+}
 
 export default function Scene() {
   return (
@@ -24,6 +56,8 @@ export default function Scene() {
           <GlowingOrbs count={6} />
         </Suspense>
 
+        <CameraController />
+
         <EffectComposer>
           <Bloom
             intensity={1.5}
@@ -36,15 +70,6 @@ export default function Scene() {
             blendFunction={BlendFunction.NORMAL}
           />
         </EffectComposer>
-
-        <OrbitControls
-          enableZoom={false}
-          enablePan={false}
-          maxPolarAngle={Math.PI / 2}
-          minPolarAngle={Math.PI / 4}
-          autoRotate
-          autoRotateSpeed={0.3}
-        />
       </Canvas>
     </div>
   )

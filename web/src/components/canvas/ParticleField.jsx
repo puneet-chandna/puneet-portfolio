@@ -2,6 +2,12 @@ import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
+// Seeded random for deterministic results
+function seededRandom(seed) {
+  const x = Math.sin(seed * 9999) * 10000
+  return x - Math.floor(x)
+}
+
 export default function ParticleField({ count = 2000 }) {
   const mesh = useRef()
   
@@ -10,12 +16,12 @@ export default function ParticleField({ count = 2000 }) {
     const colors = new Float32Array(count * 3)
     
     for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 50
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 50
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 50
+      positions[i * 3] = (seededRandom(i * 3) - 0.5) * 50
+      positions[i * 3 + 1] = (seededRandom(i * 3 + 1) - 0.5) * 50
+      positions[i * 3 + 2] = (seededRandom(i * 3 + 2) - 0.5) * 50
       
       // Tron colors: cyan to blue gradient
-      const t = Math.random()
+      const t = seededRandom(i * 7)
       colors[i * 3] = t * 0 + (1 - t) * 0
       colors[i * 3 + 1] = t * 0.83 + (1 - t) * 0.4
       colors[i * 3 + 2] = t * 1 + (1 - t) * 1

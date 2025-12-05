@@ -1,7 +1,13 @@
-import { useRef } from 'react'
+import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Float, Sphere } from '@react-three/drei'
 import * as THREE from 'three'
+
+// Seeded random for deterministic results
+function seededRandom(seed) {
+  const x = Math.sin(seed * 9999) * 10000
+  return x - Math.floor(x)
+}
 
 export default function GlowingOrbs({ count = 8 }) {
   const groupRef = useRef()
@@ -12,22 +18,24 @@ export default function GlowingOrbs({ count = 8 }) {
     }
   })
 
-  const orbs = Array.from({ length: count }, (_, i) => {
-    const angle = (i / count) * Math.PI * 2
-    const radius = 8 + Math.random() * 4
-    const y = (Math.random() - 0.5) * 10
-    
-    return {
-      position: [
-        Math.cos(angle) * radius,
-        y,
-        Math.sin(angle) * radius
-      ],
-      scale: 0.1 + Math.random() * 0.3,
-      color: i % 2 === 0 ? '#00d4ff' : '#0066ff',
-      speed: 0.5 + Math.random() * 1
-    }
-  })
+  const orbs = useMemo(() => {
+    return Array.from({ length: count }, (_, i) => {
+      const angle = (i / count) * Math.PI * 2
+      const radius = 8 + seededRandom(i * 10) * 4
+      const y = (seededRandom(i * 20) - 0.5) * 10
+      
+      return {
+        position: [
+          Math.cos(angle) * radius,
+          y,
+          Math.sin(angle) * radius
+        ],
+        scale: 0.1 + seededRandom(i * 30) * 0.3,
+        color: i % 2 === 0 ? '#00d4ff' : '#0066ff',
+        speed: 0.5 + seededRandom(i * 40) * 1
+      }
+    })
+  }, [count])
 
   return (
     <group ref={groupRef}>

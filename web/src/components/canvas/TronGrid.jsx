@@ -3,7 +3,6 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
 export default function TronGrid({ size = 100, divisions = 50 }) {
-  const gridRef = useRef()
   const linesRef = useRef()
 
   const linePositions = useMemo(() => {
