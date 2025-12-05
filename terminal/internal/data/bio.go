@@ -23,10 +23,10 @@ MISSION LOG:
 
 TECH ARSENAL:
   ┌─────────────┬─────────────┬─────────────┐
-  │ Python      │ JavaScript  │ C++         │
-  │ Node.js     │ React       │ Next.js     │
-  │ MongoDB     │ PostgreSQL  │ AWS/GCP     │
-  │ Docker      │ Linux       │ Git         │
+  │ Python      │ JavaScript  │ Go          │
+  │ C++         │ Node.js     │ React       │
+  │ Next.js     │ MongoDB     │ PostgreSQL  │
+  │ AWS/GCP     │ Docker      │ Linux/Git   │
   └─────────────┴─────────────┴─────────────┘
 
 CORE COMPETENCIES:
