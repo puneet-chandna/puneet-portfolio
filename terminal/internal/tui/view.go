@@ -353,13 +353,16 @@ func (m Model) renderContactInfo() string {
 Establish communication via secure channels:
 
 ` + MenuActiveStyle.Render("EMAIL") + `
-  puneet@example.com
+  puneetchandna@zohomail.in
 
 ` + MenuActiveStyle.Render("GITHUB") + `
-  github.com/puneet
+  github.com/puneet-chandna
 
 ` + MenuActiveStyle.Render("LINKEDIN") + `
-  linkedin.com/in/puneet
+  linkedin.com/in/puneet-chandna2004
+
+` + MenuActiveStyle.Render("WEBSITE") + `
+  puneetchandna.com
 
 ` + DimStyle.Render(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
