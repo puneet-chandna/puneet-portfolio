@@ -1,3 +1,10 @@
+import { 
+  SiPython, SiJavascript, SiGo, SiCplusplus, SiReact, 
+  SiNodedotjs, SiNextdotjs, SiMongodb, SiPostgresql, 
+  SiAmazonwebservices, SiDocker, SiLinux, SiGit, 
+  SiThreedotjs, SiPytorch, SiGooglecloud
+} from 'react-icons/si'
+
 export const projects = [
   {
     id: 1,
@@ -7,7 +14,7 @@ export const projects = [
     year: 2025,
     status: "Live",
     url: "https://github.com/puneet-chandna",
-    icon: "🎬"
+    image: "/projects/ascii.png"
   },
   {
     id: 2,
@@ -17,7 +24,7 @@ export const projects = [
     year: 2025,
     status: "Live",
     url: "",
-    icon: "🔐"
+    image: "/projects/aes.png"
   },
   {
     id: 3,
@@ -27,7 +34,7 @@ export const projects = [
     year: 2025,
     status: "Live",
     url: "https://github.com/puneet-chandna",
-    icon: "🎭"
+    image: "/projects/movie.png"
   },
   {
     id: 4,
@@ -37,7 +44,7 @@ export const projects = [
     year: 2025,
     status: "Live",
     url: "",
-    icon: "🌱"
+    image: "/projects/crop.png"
   },
   {
     id: 5,
@@ -47,7 +54,7 @@ export const projects = [
     year: 2024,
     status: "Live",
     url: "https://github.com/puneet-chandna",
-    icon: "🎟️"
+    image: "/projects/event.png"
   },
   {
     id: 6,
@@ -57,7 +64,7 @@ export const projects = [
     year: 2024,
     status: "Live",
     url: "https://github.com/puneet-chandna",
-    icon: "💧"
+    image: "/projects/water.png"
   }
 ];
 
@@ -86,26 +93,27 @@ export const experience = [
 ];
 
 export const skills = [
-  { name: "Python", icon: "🐍" },
-  { name: "JavaScript", icon: "💛" },
-  { name: "Go", icon: "🔷" },
-  { name: "C++", icon: "⚡" },
-  { name: "React", icon: "⚛️" },
-  { name: "Node.js", icon: "💚" },
-  { name: "Next.js", icon: "▲" },
-  { name: "MongoDB", icon: "🍃" },
-  { name: "PostgreSQL", icon: "🐘" },
-  { name: "AWS", icon: "☁️" },
-  { name: "Docker", icon: "🐳" },
-  { name: "Linux", icon: "🐧" },
-  { name: "Git", icon: "📦" },
-  { name: "Three.js", icon: "🎮" },
-  { name: "Machine Learning", icon: "🤖" }
+  { name: "Python", icon: SiPython, color: "#3776AB" },
+  { name: "JavaScript", icon: SiJavascript, color: "#F7DF1E" },
+  { name: "Go", icon: SiGo, color: "#00ADD8" },
+  { name: "C++", icon: SiCplusplus, color: "#00599C" },
+  { name: "React", icon: SiReact, color: "#61DAFB" },
+  { name: "Node.js", icon: SiNodedotjs, color: "#339933" },
+  { name: "Next.js", icon: SiNextdotjs, color: "#FFFFFF" },
+  { name: "MongoDB", icon: SiMongodb, color: "#47A248" },
+  { name: "PostgreSQL", icon: SiPostgresql, color: "#4169E1" },
+  { name: "AWS", icon: SiAmazonwebservices, color: "#FF9900" },
+  { name: "Google Cloud", icon: SiGooglecloud, color: "#4285F4" },
+  { name: "Docker", icon: SiDocker, color: "#2496ED" },
+  { name: "Linux", icon: SiLinux, color: "#FCC624" },
+  { name: "Git", icon: SiGit, color: "#F05032" },
+  { name: "Three.js", icon: SiThreedotjs, color: "#FFFFFF" },
+  { name: "ML/PyTorch", icon: SiPytorch, color: "#EE4C2C" }
 ];
 
 export const socialLinks = {
   github: "https://github.com/puneet-chandna",
-  linkedin: "https://linkedin.com/in/puneet-chandna2004",
+  linkedin: "https://www.linkedin.com/in/puneet-chandna",
   email: "puneetchandna@zohomail.in",
   website: "https://puneetchandna.com"
 };

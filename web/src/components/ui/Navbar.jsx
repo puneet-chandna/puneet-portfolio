@@ -22,7 +22,20 @@ export default function Navbar() {
         background: scrolled ? 'rgba(10, 10, 15, 0.95)' : 'rgba(10, 10, 15, 0.8)'
       }}
     >
-      <a href="#home" className="logo">PC</a>
+      <a href="#home" className="logo">
+        <img 
+          src="/puneet.png" 
+          alt="Puneet Chandna" 
+          style={{ 
+            width: '32px', 
+            height: '32px', 
+            borderRadius: '50%',
+            marginRight: '10px',
+            objectFit: 'cover'
+          }} 
+        />
+        <span>Puneet Chandna</span>
+      </a>
       
       <ul className="nav-links">
         <li><a href="#about">About</a></li>

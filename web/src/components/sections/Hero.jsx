@@ -23,7 +23,7 @@ export default function Hero() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.6 }}
         >
-          Full Stack Developer • Research Intern • Building the Future
+          A software engineer with a passion for technology, innovation, and solving complex problems
         </motion.p>
 
         <motion.div
@@ -34,6 +34,14 @@ export default function Hero() {
         >
           <a href="#projects" className="btn btn-primary">
             View Projects
+          </a>
+          <a 
+            href="/puneet_resume.pdf" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="btn btn-primary"
+          >
+             Resume
           </a>
           <a href="#contact" className="btn btn-outline">
             Get in Touch

@@ -14,19 +14,20 @@ export default function About() {
         <div className="about-content">
           <div className="about-text">
             <p>
-              I'm a <span className="highlight">Computer Science student</span> at VIT Chennai, 
-              passionate about building software that's both performant and elegant.
+              I am <span className="highlight">Puneet Chandna</span>, a software engineer and problem solver based in India, currently a final year student at <span className="highlight">VIT Chennai</span>. 
             </p>
             <p>
-              With experience at <span className="highlight">IIT Bombay</span>, 
-              <span className="highlight"> Daira Edtech</span>, and 
-              <span className="highlight"> CeAT VIT</span>, I've worked on everything from 
-              cloud optimization algorithms to full-stack web platforms.
+              My professional experience includes roles as a Research Intern at <span className="highlight">CeAT VIT</span> and Full Stack Developer Intern at <span className="highlight">Daira EdTech</span>, where I honed my skills in solving real-world engineering challenges.
             </p>
             <p>
-              When I'm not coding, I'm leading blockchain workshops as 
-              <span className="highlight"> Outreach Lead at DAO Community</span> or 
-              mentoring students in the Hackclub.
+              Beyond engineering, I have been actively involved in student tech communities. As the <span className="highlight">Blockchain Lead at HackClub VIT</span> and a core member of the <span className="highlight">DAO Community</span> (Outreach & Web Lead), I’ve organized hackathons, guided student teams, and helped foster a culture of hands-on learning.
+            </p>
+            <p>
+              Outside of technology, I enjoy science-fiction films, minimalist design, and long conversations around productivity and personal growth.I also enjoy the challenge of maintaining a balance between my culinary explorations and fitness goals.
+            </p>
+            <p>I’m always open to exploring new ideas or collaborating on meaningful projects.</p>
+            <p>
+              Feel free to reach out at <a href="mailto:puneetchandna@zohomail.in" style={{ color: 'var(--primary)', textDecoration: 'none' }}>puneetchandna@zohomail.in</a>
             </p>
           </div>
           
