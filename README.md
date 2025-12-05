@@ -1,168 +1,384 @@
-# Puneet Portfolio
+```
 
-A dual-interface portfolio featuring both a **terminal-based SSH experience** and a **modern 3D web application**.
+    ██████╗ ██╗   ██╗███╗   ██╗███████╗███████╗████████╗
+    ██╔══██╗██║   ██║████╗  ██║██╔════╝██╔════╝╚══██╔══╝
+    ██████╔╝██║   ██║██╔██╗ ██║█████╗  █████╗     ██║
+    ██╔═══╝ ██║   ██║██║╚██╗██║██╔══╝  ██╔══╝     ██║
+    ██║     ╚██████╔╝██║ ╚████║███████╗███████╗   ██║
+    ╚═╝      ╚═════╝ ╚═╝  ╚═══╝╚══════╝╚══════╝   ╚═╝
 
-![Terminal + Web Portfolio](https://img.shields.io/badge/Go-00ADD8?style=flat&logo=go&logoColor=white)
-![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)
-![Three.js](https://img.shields.io/badge/Three.js-000000?style=flat&logo=three.js&logoColor=white)
+    ██████╗  ██████╗ ██████╗ ████████╗███████╗ ██████╗ ██╗     ██╗ ██████╗
+    ██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝██╔════╝██╔═══██╗██║     ██║██╔═══██╗
+    ██████╔╝██║   ██║██████╔╝   ██║   █████╗  ██║   ██║██║     ██║██║   ██║
+    ██╔═══╝ ██║   ██║██╔══██╗   ██║   ██╔══╝  ██║   ██║██║     ██║██║   ██║
+    ██║     ╚██████╔╝██║  ██║   ██║   ██║     ╚██████╔╝███████╗██║╚██████╔╝
+    ╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝      ╚═════╝ ╚══════╝╚═╝ ╚═════╝
+
+              ╔══════════════════════════════════════════════════╗
+              ║  >> WELCOME TO THE GRID, PROGRAM. <<             ║
+              ║  >> YOU HAVE ENTERED THE SYSTEM. <<              ║
+              ╚══════════════════════════════════════════════════╝
+```
+
+<div align="center">
+
+![Tron](https://img.shields.io/badge/AESTHETIC-TRON-00d4ff?style=for-the-badge&labelColor=0a0a0f)
+![Status](https://img.shields.io/badge/STATUS-ONLINE-00ff88?style=for-the-badge&labelColor=0a0a0f)
+![Threat](https://img.shields.io/badge/THREAT_LEVEL-MAXIMUM-ff0044?style=for-the-badge&labelColor=0a0a0f)
+
+<br/>
+
+```css
+/* SYSTEM DIAGNOSTIC */
+NEURAL_LINK: ████████████████ 100%
+GRID_SYNC:   ████████████████ 100%
+IDENTITY:    ████████████████ VERIFIED
+```
+
+<br/>
+
+[![Go](https://img.shields.io/badge/Go-00ADD8?style=flat-square&logo=go&logoColor=white)](https://golang.org)
+[![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://reactjs.org)
+[![Three.js](https://img.shields.io/badge/Three.js-000000?style=flat-square&logo=three.js&logoColor=white)](https://threejs.org)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev)
+
+</div>
 
 ---
 
-## 🖥️ Terminal Portfolio
+<br/>
 
-An SSH-accessible portfolio built with Go and the [Charm](https://charm.sh/) stack. Features a retro **Tron aesthetic** with boot sequence animations, 3-pane TUI layout, and a contact form.
+## `> WHAT THE FUCK IS THIS?`
 
-### Features
+<img align="right" width="300" src="https://media.giphy.com/media/xT9IgzoKnwFNmISR8I/giphy.gif"/>
 
-- 🚀 Boot sequence animation (spinner → progress bar → ACCESS GRANTED)
-- 📊 3-pane responsive layout (Menu, Viewport, Inspector)
-- ⌨️ Vim-style navigation (j/k, arrow keys)
-- 📨 Contact form with Web3Forms integration
-- 🎨 Tron theme (cyan glow, deep black, electric blue)
+You're looking at **the most overengineered portfolio in existence**.
 
-### Tech Stack
+A dual-interface digital fortress that exists in two dimensions:
 
-- **Go** - Core language
-- **Bubble Tea** - TUI framework
-- **Lipgloss** - Terminal styling
-- **Wish** - SSH server
+- **🖥️ THE TERMINAL** → SSH into my soul
+- **🌐 THE GRID** → A 3D WebGL fever dream
+
+This isn't just a portfolio. It's a **statement**. A monument to the fact that I had too much time, too much caffeine, and absolutely zero chill.
+
+<br clear="right"/>
+
+---
+
+<br/>
+
+## `> SYSTEM ARCHITECTURE`
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                             │
+│   ╔═══════════════════════════════════════════════════════════════════╗     │
+│   ║                     P U N E E T . S H                             ║     │
+│   ╠═══════════════════════════════════════════════════════════════════╣     │
+│   ║                                                                   ║     │
+│   ║   ┌─────────────────┐         ┌─────────────────────────────┐    ║     │
+│   ║   │   SSH SERVER    │◄───────►│      WEB APPLICATION        │    ║     │
+│   ║   │                 │         │                             │    ║     │
+│   ║   │  • Go + Wish    │         │  • React + Three.js         │    ║     │
+│   ║   │  • Bubble Tea   │         │  • WebGL Postprocessing     │    ║     │
+│   ║   │  • Lipgloss     │         │  • Framer Motion            │    ║     │
+│   ║   │                 │         │  • Particle Physics         │    ║     │
+│   ║   └────────┬────────┘         └──────────────┬──────────────┘    ║     │
+│   ║            │                                 │                    ║     │
+│   ║            └─────────────┬───────────────────┘                    ║     │
+│   ║                          │                                        ║     │
+│   ║               ┌──────────▼──────────┐                             ║     │
+│   ║               │   WEB3FORMS API     │                             ║     │
+│   ║               │   (Contact Form)    │                             ║     │
+│   ║               └─────────────────────┘                             ║     │
+│   ║                                                                   ║     │
+│   ╚═══════════════════════════════════════════════════════════════════╝     │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+<br/>
+
+## `> ENTER THE TERMINAL`
+
+<div align="center">
+
+```
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║   $ ssh puneet.sh                                                            ║
+║                                                                              ║
+║   ████████████████████████████████████████████████████████ 100%              ║
+║                                                                              ║
+║   ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓   ║
+║   ┃ ╔═╗╔═╗╔═╗╔═╗╔═╗╔═╗  ╔═╗╦═╗╔═╗╔╗╔╔╦╗╔═╗╔╦╗                            ┃   ║
+║   ┃ ╠═╣║  ║  ║╣ ╚═╗╚═╗  ║ ╦╠╦╝╠═╣║║║ ║ ║╣  ║║                            ┃   ║
+║   ┃ ╩ ╩╚═╝╚═╝╚═╝╚═╝╚═╝  ╚═╝╩╚═╩ ╩╝╚╝ ╩ ╚═╝═╩╝                            ┃   ║
+║   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛   ║
+║                                                                              ║
+║   [ABOUT ME]      [PROJECTS]      [CONTACT]                                  ║
+║                                                                              ║
+║   > Navigate with j/k or arrow keys                                          ║
+║   > Press ENTER to select                                                    ║
+║   > Press ? for help                                                         ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+```
+
+</div>
+
+### Terminal Features
+
+| Feature            | Description                                               |
+| ------------------ | --------------------------------------------------------- |
+| `🚀 Boot Sequence` | Matrix-style initialization with spinner and progress bar |
+| `📊 3-Pane Layout` | Menu → Viewport → Inspector (vim-style navigation)        |
+| `📨 Contact Form`  | Live Web3Forms integration - messages hit my inbox        |
+| `🎨 Tron Theme`    | Cyan glow, electric blue, deep void black                 |
+| `⌨️ Vim Bindings`  | j/k navigation because we're not savages                  |
 
 ### Run Locally
 
 ```bash
 cd terminal
-source .env  # Load Web3Forms key
+source .env  # Load the sacred keys
 ./portfolio
 
-# In another terminal:
+# In another terminal dimension:
 ssh localhost -p 2222
 ```
 
-### Build
-
-```bash
-cd terminal
-go build -o portfolio ./cmd/portfolio
-```
-
 ---
 
-## 🌐 Web Portfolio
+<br/>
 
-A modern React portfolio with immersive **3D animations** using Three.js and React Three Fiber.
+## `> ENTER THE GRID`
 
-### Features
+<div align="center">
 
-- ✨ 3D particle field background
-- 🔲 Tron-style glowing grid floor
-- 💫 Floating orbs with bloom effects
-- 🎬 Framer Motion scroll animations
-- 📱 Fully responsive design
-- 📨 Contact form with Web3Forms
+```
+                    ▲
+                   ╱ ╲
+                  ╱   ╲
+                 ╱     ╲
+                ╱   ◉   ╲        << YOU ARE HERE
+               ╱         ╲
+              ╱           ╲
+             ╱─────────────╲
+            ╱               ╲
+           ╱                 ╲
+          ╱      T R O N      ╲
+         ╱                     ╲
+        ╱   G R I D   L I N E S ╲
+       ╱═══════════════════════════╲
+      ╱                             ╲
+     ╱                               ╲
+    ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
+```
 
-### Tech Stack
+</div>
 
-- **React** + **Vite** - Frontend framework
-- **Three.js** - 3D graphics
-- **React Three Fiber** - React renderer for Three.js
-- **@react-three/drei** - R3F helpers
-- **@react-three/postprocessing** - Bloom, chromatic aberration
-- **Framer Motion** - UI animations
-- **GSAP** - Complex animations
+### 3D Scene Components
+
+```javascript
+// THE UNHOLY TRINITY OF VISUAL CHAOS
+<ParticleField count={1500} />  // 1500 floating particles
+<TronGrid size={80} />          // Glowing floor grid
+<GlowingOrbs count={6} />       // Floating energy spheres
+```
+
+### Visual Effects Pipeline
+
+```
+┌────────────┐    ┌────────────┐    ┌────────────┐    ┌────────────┐
+│  SCENE     │───►│   BLOOM    │───►│ CHROMATIC  │───►│  OUTPUT    │
+│            │    │  PASS      │    │ ABERRATION │    │            │
+└────────────┘    └────────────┘    └────────────┘    └────────────┘
+      │                                                      │
+      │         << POSTPROCESSING PIPELINE >>                │
+      └──────────────────────────────────────────────────────┘
+```
 
 ### Run Locally
 
 ```bash
 cd web
-npm install
-npm run dev
-```
+npm install   # Summon the dependencies
+npm run dev   # Ignite the grid
 
-### Build for Production
-
-```bash
-cd web
-npm run build
+# Your browser will transcend at:
+# http://localhost:5173
 ```
 
 ---
 
-## 📁 Project Structure
+<br/>
+
+## `> PROJECT MANIFEST`
 
 ```
 puneet-portfolio/
-├── terminal/                    # SSH Terminal Portfolio
-│   ├── cmd/portfolio/main.go   # SSH server entry point
-│   ├── internal/
-│   │   ├── tui/                # TUI components
-│   │   │   ├── model.go        # App state
-│   │   │   ├── update.go       # Key handling
-│   │   │   ├── view.go         # Rendering
-│   │   │   ├── styles.go       # Tron theme
-│   │   │   └── sender.go       # Web3Forms integration
-│   │   └── data/               # Content (bio, projects)
-│   ├── deploy/                 # systemd service file
-│   └── .env                    # WEB3FORMS_KEY
 │
-├── web/                        # React 3D Portfolio
+├── terminal/                          # << THE SSH DIMENSION
+│   ├── cmd/portfolio/main.go         # SSH server entry
+│   ├── internal/
+│   │   ├── tui/
+│   │   │   ├── model.go              # State machine
+│   │   │   ├── update.go             # Event handlers
+│   │   │   ├── view.go               # Render logic
+│   │   │   ├── styles.go             # Tron aesthetics
+│   │   │   └── sender.go             # Web3Forms bridge
+│   │   └── data/
+│   │       ├── bio.go                # ASCII art bio
+│   │       └── projects.go           # Project data
+│   └── .env                          # Secrets (gitignored)
+│
+├── web/                               # << THE WEBGL DIMENSION
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── canvas/         # 3D scene components
-│   │   │   ├── sections/       # Page sections
-│   │   │   └── ui/             # UI components
-│   │   ├── data/               # Portfolio content
-│   │   └── styles/             # CSS
-│   └── .env                    # VITE_WEB3FORMS_KEY
+│   │   │   ├── canvas/
+│   │   │   │   ├── Scene.jsx         # Main R3F canvas
+│   │   │   │   ├── ParticleField.jsx # 1500 particles
+│   │   │   │   ├── TronGrid.jsx      # Floor grid
+│   │   │   │   └── GlowingOrbs.jsx   # Floating orbs
+│   │   │   ├── sections/
+│   │   │   │   ├── Hero.jsx          # Landing
+│   │   │   │   ├── About.jsx         # Bio
+│   │   │   │   ├── Experience.jsx    # Timeline
+│   │   │   │   ├── Projects.jsx      # Grid
+│   │   │   │   ├── Skills.jsx        # Tech stack
+│   │   │   │   └── Contact.jsx       # Form + SSH CTA
+│   │   │   └── ui/
+│   │   │       └── Navbar.jsx        # Navigation
+│   │   ├── data/
+│   │   │   └── portfolio.js          # Content data
+│   │   └── styles/
+│   │       └── index.css             # Tron theme
+│   └── .env                          # Secrets (gitignored)
 │
-└── README.md
+└── README.md                         # You are here. Why?
 ```
 
 ---
 
-## 🔐 Environment Variables
+<br/>
 
-Create `.env` files with your Web3Forms API key:
+## `> TECH ARSENAL`
 
-**terminal/.env**
+<div align="center">
 
+### Terminal Stack
+
+![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)
+![BubbleTea](https://img.shields.io/badge/🧋_Bubble_Tea-FF69B4?style=for-the-badge)
+![Lipgloss](https://img.shields.io/badge/💄_Lipgloss-FF1493?style=for-the-badge)
+![Wish](https://img.shields.io/badge/⭐_Wish-9400D3?style=for-the-badge)
+
+### Web Stack
+
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Three.js](https://img.shields.io/badge/Three.js-000000?style=for-the-badge&logo=three.js&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Framer](https://img.shields.io/badge/Framer-0055FF?style=for-the-badge&logo=framer&logoColor=white)
+
+### Integrations
+
+![Web3Forms](https://img.shields.io/badge/Web3Forms-00C7B7?style=for-the-badge)
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+
+</div>
+
+---
+
+<br/>
+
+## `> DEPLOYMENT PROTOCOLS`
+
+### Terminal Deployment (VPS)
+
+```bash
+# Build the artifact
+go build -o portfolio ./cmd/portfolio
+
+# Transfer to your server
+scp portfolio user@your-server:/opt/portfolio/
+
+# Set up systemd service
+sudo cp deploy/portfolio.service /etc/systemd/system/
+sudo systemctl enable portfolio
+sudo systemctl start portfolio
+
+# Configure DNS: puneet.sh → your.server.ip
 ```
-WEB3FORMS_KEY=your-key-here
-```
 
-**web/.env**
+### Web Deployment (Vercel)
 
-```
-VITE_WEB3FORMS_KEY=your-key-here
+```bash
+# Just push to GitHub and connect to Vercel
+# Or manually:
+cd web
+npm run build
+vercel deploy --prod
 ```
 
 ---
 
-## 🚀 Deployment
+<br/>
 
-### Terminal (VPS)
+## `> ENVIRONMENT CONFIGURATION`
 
-1. Build the binary: `go build -o portfolio ./cmd/portfolio`
-2. Copy to VPS and set up systemd service (see `terminal/deploy/portfolio.service`)
-3. Configure firewall to allow port 22 or 2222
+```bash
+# terminal/.env
+WEB3FORMS_KEY=your-secret-key-here
 
-### Web (Vercel/Netlify)
+# web/.env
+VITE_WEB3FORMS_KEY=your-secret-key-here
+```
 
-1. Connect your GitHub repo
-2. Set build command: `cd web && npm run build`
-3. Set output directory: `web/dist`
-4. Add environment variable: `VITE_WEB3FORMS_KEY`
-
----
-
-## 📬 Contact
-
-- **Email**: puneetchandna@zohomail.in
-- **GitHub**: [puneet-chandna](https://github.com/puneet-chandna)
-- **LinkedIn**: [puneet-chandna2004](https://linkedin.com/in/puneet-chandna2004)
-- **Website**: [puneetchandna.com](https://puneetchandna.com)
+> ⚠️ **NEVER COMMIT THESE FILES.** They're gitignored for a reason.
 
 ---
 
-## 📄 License
+<br/>
 
-MIT License - feel free to use this as inspiration for your own portfolio!
+## `> TRANSMISSION COMPLETE`
+
+<div align="center">
+
+```
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                                                                           ║
+║   ██████╗ ██████╗ ███╗   ██╗████████╗ █████╗  ██████╗████████╗            ║
+║  ██╔════╝██╔═══██╗████╗  ██║╚══██╔══╝██╔══██╗██╔════╝╚══██╔══╝            ║
+║  ██║     ██║   ██║██╔██╗ ██║   ██║   ███████║██║        ██║               ║
+║  ██║     ██║   ██║██║╚██╗██║   ██║   ██╔══██║██║        ██║               ║
+║  ╚██████╗╚██████╔╝██║ ╚████║   ██║   ██║  ██║╚██████╗   ██║               ║
+║   ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝   ╚═╝               ║
+║                                                                           ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+```
+
+<br/>
+
+[![Email](https://img.shields.io/badge/Email-puneetchandna%40zohomail.in-00d4ff?style=for-the-badge&logo=mail.ru&logoColor=white)](mailto:puneetchandna@zohomail.in)
+[![GitHub](https://img.shields.io/badge/GitHub-puneet--chandna-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/puneet-chandna)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-puneet--chandna-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/puneet-chandna)
+[![Website](https://img.shields.io/badge/Website-puneetchandna.com-00ff88?style=for-the-badge&logo=google-chrome&logoColor=white)](https://puneetchandna.com)
+
+<br/>
+
+```
+>> END OF LINE
+```
+
+</div>
+
+---
+
+<div align="center">
+<sub>Built with 🧠 overthinking and ☕ unhealthy amounts of caffeine</sub>
+<br/>
+<sub>© 2025 Puneet Chandna | The Grid Remembers</sub>
+</div>
