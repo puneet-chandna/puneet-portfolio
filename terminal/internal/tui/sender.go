@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"os"
 	"time"
 )
 
 const web3FormsURL = "https://api.web3forms.com/submit"
-const web3FormsKey = "4e4fb280-8c90-4e14-b8b8-2f11286cfdc8"
 
 type ContactPayload struct {
 	AccessKey string `json:"access_key"`
@@ -20,7 +20,7 @@ type ContactPayload struct {
 
 func SendContactForm(name, email, message string) error {
 	payload := ContactPayload{
-		AccessKey: web3FormsKey,
+		AccessKey: os.Getenv("WEB3FORMS_KEY"),
 		Name:      name,
 		Email:     email,
 		Message:   message,
