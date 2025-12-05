@@ -26,7 +26,7 @@ export default function Navbar() {
       >
         <a href="#home" className="logo">
           <img 
-            src="/puneet.png" 
+            src="/puneet.webp" 
             alt="Puneet Chandna" 
             onClick={(e) => {
               e.preventDefault()
@@ -80,7 +80,7 @@ export default function Navbar() {
             }}
           >
             <motion.img
-              src="/puneet.png"
+              src="/puneet.webp"
               alt="Puneet Chandna"
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}

@@ -13,8 +13,8 @@ export const projects = [
     stack: ["Python", "OpenCV", "PIL", "ANSI"],
     year: 2025,
     status: "Live",
-    url: "https://github.com/puneet-chandna",
-    image: "/projects/ascii.png"
+    url: "https://github.com/puneet-chandna/ascii-video-insanity",
+    image: "/projects/ascii.webp"
   },
   {
     id: 2,
@@ -24,7 +24,7 @@ export const projects = [
     year: 2025,
     status: "Live",
     url: "",
-    image: "/projects/aes.png"
+    image: "/projects/aes.webp"
   },
   {
     id: 3,
@@ -33,8 +33,8 @@ export const projects = [
     stack: ["Python", "SBERT", "spaCy", "ML"],
     year: 2025,
     status: "Live",
-    url: "https://github.com/puneet-chandna",
-    image: "/projects/movie.png"
+    url: "https://github.com/puneet-chandna/Emotion-Aware-Movie-Recommendation-System-Using-Hybrid-Emotional-States",
+    image: "/projects/movie.webp"
   },
   {
     id: 4,
@@ -44,7 +44,7 @@ export const projects = [
     year: 2025,
     status: "Live",
     url: "",
-    image: "/projects/crop.png"
+    image: "/projects/crop.webp"
   },
   {
     id: 5,
@@ -53,8 +53,8 @@ export const projects = [
     stack: ["Node.js", "Express", "Flutter", "MongoDB"],
     year: 2024,
     status: "Live",
-    url: "https://github.com/puneet-chandna",
-    image: "/projects/event.png"
+    url: "https://github.com/puneet-chandna/bookmyshow_server",
+    image: "/projects/event.webp"
   },
   {
     id: 6,
@@ -63,8 +63,8 @@ export const projects = [
     stack: ["Streamlit", "Python", "Plotly"],
     year: 2024,
     status: "Live",
-    url: "https://github.com/puneet-chandna",
-    image: "/projects/water.png"
+    url: "https://github.com/puneet-chandna/water-brakes",
+    image: "/projects/water.webp"
   }
 ];
 

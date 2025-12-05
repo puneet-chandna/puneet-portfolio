@@ -24,10 +24,10 @@ function App() {
       <footer style={{
         textAlign: 'center',
         padding: '2rem',
-        color: 'var(--text-dim)',
+        color: 'var(--text)',
         borderTop: '1px solid var(--dim)'
       }}>
-        <p>© 2025 Puneet Chandna. Built with React & Three.js</p>
+        <p>© 2025 Puneet Chandna. All rights reserved.</p>
       </footer>
     </>
   )
