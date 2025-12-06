@@ -9,7 +9,7 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/puneet.png",
+      "src": "/puneet-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
