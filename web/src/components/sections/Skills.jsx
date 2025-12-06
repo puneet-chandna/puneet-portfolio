@@ -21,7 +21,11 @@ export default function Skills() {
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3, delay: index * 0.05 }}
               viewport={{ once: true }}
-              whileHover={{ scale: 1.1, borderColor: skill.color }}
+              whileHover={{ 
+                scale: 1.1, 
+                borderColor: skill.color,
+                transition: { duration: 0.1 }
+              }}
             >
               <skill.icon className="icon" style={{ color: skill.color }} />
               <span style={{ color: skill.color }}>{skill.name}</span>

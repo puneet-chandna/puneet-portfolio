@@ -343,12 +343,11 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--dim);
   border-radius: 12px;
-  transition: all 0.3s ease;
+  transition: border-color 0.1s ease;
 }
 
 .skill-item:hover {
   border-color: var(--primary);
-  transform: translateY(-5px);
 }
 
 .skill-item .icon {
