@@ -21,12 +21,18 @@ import (
 	"github.com/puneet/terminal-portfolio/internal/tui"
 )
 
-const (
-	host = "0.0.0.0"
-	port = "2222"
-)
+const host = "0.0.0.0"
+
+// getPort returns the SSH port from environment variable or default
+func getPort() string {
+	if port := os.Getenv("SSH_PORT"); port != "" {
+		return port
+	}
+	return "22" // Default to port 22 for production
+}
 
 func main() {
+	port := getPort()
 	srv, err := wish.NewServer(
 		wish.WithAddress(net.JoinHostPort(host, port)),
 		wish.WithHostKeyPath(".ssh/id_ed25519"),

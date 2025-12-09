@@ -4,13 +4,17 @@ After=network.target
 
 [Service]
 Type=simple
-User=puneet
+User=root
 WorkingDirectory=/opt/terminal-portfolio
 ExecStart=/opt/terminal-portfolio/portfolio
 Restart=always
 RestartSec=5
 StandardOutput=journal
 StandardError=journal
+# Load environment variables from file
+EnvironmentFile=/opt/terminal-portfolio/.env
+# Allow binding to port 22
+AmbientCapabilities=CAP_NET_BIND_SERVICE
 
 [Install]
 WantedBy=multi-user.target
