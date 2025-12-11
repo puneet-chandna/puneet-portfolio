@@ -36,7 +36,7 @@ export default function Hero() {
             View Projects
           </a>
           <a 
-            href="/puneet_resume.pdf" 
+            href="/Puneet-Chandna-Resume.pdf" 
             target="_blank" 
             rel="noopener noreferrer" 
             className="btn btn-primary"
