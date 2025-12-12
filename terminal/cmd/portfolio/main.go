@@ -18,6 +18,7 @@ import (
 	"github.com/charmbracelet/wish/activeterm"
 	"github.com/charmbracelet/wish/bubbletea"
 	"github.com/charmbracelet/wish/logging"
+	"github.com/joho/godotenv"
 	"github.com/puneet/terminal-portfolio/internal/tui"
 )
 
@@ -32,6 +33,9 @@ func getPort() string {
 }
 
 func main() {
+	// Load .env file (ignore error if not found - will use system env vars)
+	_ = godotenv.Load()
+
 	port := getPort()
 	srv, err := wish.NewServer(
 		wish.WithAddress(net.JoinHostPort(host, port)),

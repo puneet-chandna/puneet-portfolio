@@ -9,7 +9,7 @@ var (
 	ColorPrimary   = lipgloss.Color("#00d4ff") // Cyan glow
 	ColorSecondary = lipgloss.Color("#0066ff") // Electric blue
 	ColorAccent    = lipgloss.Color("#ff6600") // Orange warning
-	ColorDim       = lipgloss.Color("#3a3a4a") // Muted grey
+	ColorDim       = lipgloss.Color("#7a7a8a") // Muted grey (lighter for readability)
 	ColorText      = lipgloss.Color("#e0e0e0") // Soft white
 	ColorSuccess   = lipgloss.Color("#00ff88") // Green
 

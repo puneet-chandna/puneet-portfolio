@@ -34,12 +34,14 @@ func (m Model) renderBoot() string {
 	spinner := BootSpinnerStyle.Render(frame)
 	text := DimStyle.Render(" Establishing secure link to PUNEET-MAINFRAME...")
 
+	// Use a style without MarginBottom for ASCII art so lines are adjacent
+	asciiStyle := TitleStyle.MarginBottom(0)
+	asciiTitle := asciiStyle.Render("█▀█ █░█ █▄░█ █▀▀ █▀▀ ▀█▀ ▄▄ █▀█ █▀\n█▀▀ █▄█ █░▀█ ██▄ ██▄ ░█░ ░░ █▄█ ▄█")
+
 	content := lipgloss.JoinVertical(lipgloss.Center,
 		"",
 		"",
-		TitleStyle.Render("█▀█ █░█ █▄░█ █▀▀ █▀▀ ▀█▀ ▄▄ █▀█ █▀"),
-		TitleStyle.Render("█▀▀ █▄█ █░▀█ ██▄ ██▄ ░█░ ░░ █▄█ ▄█"),
-		"",
+		asciiTitle,
 		"",
 		spinner+text,
 		"",
@@ -273,7 +275,7 @@ func (m Model) renderHelpOverlay() string {
 }
 
 func (m Model) renderMenu(width, height int) string {
-	items := []string{"About Me", "Projects", "Contact", "Exit"}
+	items := []string{"About Me", "Experience", "Projects", "Contact", "Exit"}
 
 	var menuItems []string
 	for i, item := range items {
@@ -300,7 +302,9 @@ func (m Model) renderViewport(width, height int) string {
 
 	switch m.ActiveTab() {
 	case "about":
-		content = m.Bio
+		content = m.renderColorizedBio()
+	case "experience":
+		content = m.renderExperience()
 	case "projects":
 		content = m.renderProjectList()
 	case "contact":
@@ -310,8 +314,85 @@ func (m Model) renderViewport(width, height int) string {
 			DimStyle.Render("Thank you for visiting.")
 	}
 
-	wrapped := lipgloss.NewStyle().Width(width - 4).Render(content)
-	return ViewportStyle.Width(width).Height(height).Render(wrapped)
+	// Wrap content to fit viewport width
+	contentWidth := width - 6
+	if contentWidth < 20 {
+		contentWidth = 20
+	}
+	wrapped := lipgloss.NewStyle().Width(contentWidth).Render(content)
+
+	// Add navigation hint
+	navHint := DimStyle.Render("\n[ ↑↓ Navigate Menu ]")
+
+	return ViewportStyle.Width(width).Height(height).Render(wrapped + navHint)
+}
+
+// renderExperience renders the experience/work history section
+func (m Model) renderExperience() string {
+	var lines []string
+
+	lines = append(lines, TitleStyle.Render("MISSION LOG"))
+	lines = append(lines, "")
+
+	// Experience entries
+	lines = append(lines, MenuActiveStyle.Render("Research Intern")+" @ CeAT, VIT")
+	lines = append(lines, DimStyle.Render("  May-Jul 2025"))
+	lines = append(lines, "  CloudSim Plus framework for")
+	lines = append(lines, "  VM placement optimization")
+	lines = append(lines, "")
+
+	lines = append(lines, MenuActiveStyle.Render("Full Stack Developer")+" @ Daira")
+	lines = append(lines, DimStyle.Render("  Dec 2024 - Feb 2025"))
+	lines = append(lines, "  Backend APIs, "+SuccessStyle.Render("30%")+" faster")
+	lines = append(lines, "  data retrieval")
+	lines = append(lines, "")
+
+	lines = append(lines, MenuActiveStyle.Render("Web Dev Intern")+" @ IIT Bombay")
+	lines = append(lines, DimStyle.Render("  Sept-Oct 2024"))
+	lines = append(lines, "  Reduced payload by "+SuccessStyle.Render("90%"))
+	lines = append(lines, "  Optimized DB queries")
+
+	return strings.Join(lines, "\n")
+}
+
+// renderColorizedBio returns the bio with Tron-style coloring applied
+func (m Model) renderColorizedBio() string {
+	var lines []string
+
+	// Operator header
+	lines = append(lines, TitleStyle.Render("╔══════════════════════════════╗"))
+	lines = append(lines, TitleStyle.Render("║  OPERATOR: PUNEET CHANDNA    ║"))
+	lines = append(lines, TitleStyle.Render("╚══════════════════════════════╝"))
+	lines = append(lines, "")
+
+	// Status line with colors
+	lines = append(lines, "> STATUS: "+SuccessStyle.Render("ONLINE"))
+	lines = append(lines, "> ROLE: "+MenuActiveStyle.Render("SOFTWARE ENGINEER")+" | "+MenuActiveStyle.Render("FULL STACK DEV"))
+	lines = append(lines, "> LOCATION: "+DimStyle.Render("VIT CHENNAI, INDIA"))
+	lines = append(lines, "> GRADUATION: "+AccentTextStyle.Render("2026"))
+	lines = append(lines, "")
+
+	// Tech Arsenal - responsive grid
+	lines = append(lines, TitleStyle.Render("TECH ARSENAL:"))
+	lines = append(lines, "  "+MenuActiveStyle.Render("Python")+"  "+MenuActiveStyle.Render("JavaScript")+"  "+MenuActiveStyle.Render("Go"))
+	lines = append(lines, "  "+DimStyle.Render("C++")+"     "+DimStyle.Render("Node.js")+"     "+DimStyle.Render("React"))
+	lines = append(lines, "  "+DimStyle.Render("Next.js")+" "+DimStyle.Render("MongoDB")+"     "+DimStyle.Render("PostgreSQL"))
+	lines = append(lines, "  "+AccentTextStyle.Render("AWS/GCP")+" "+AccentTextStyle.Render("Docker")+"      "+AccentTextStyle.Render("Linux/Git"))
+	lines = append(lines, "")
+
+	// Core Competencies
+	lines = append(lines, TitleStyle.Render("CORE COMPETENCIES:"))
+	lines = append(lines, "  • "+SuccessStyle.Render("Full Stack Dev")+" & APIs")
+	lines = append(lines, "  • Data Structures & Algo")
+	lines = append(lines, "  • System Design")
+	lines = append(lines, "  • "+AccentTextStyle.Render("Cryptography")+" (AES)")
+	lines = append(lines, "  • Cloud Computing")
+	lines = append(lines, "")
+
+	lines = append(lines, SubtitleStyle.Render("> \"Building performant &"))
+	lines = append(lines, SubtitleStyle.Render("   elegant software.\""))
+
+	return strings.Join(lines, "\n")
 }
 
 func (m Model) renderProjectList() string {
@@ -359,7 +440,7 @@ Establish communication via secure channels:
   github.com/puneet-chandna
 
 ` + MenuActiveStyle.Render("LINKEDIN") + `
-  linkedin.com/in/puneet-chandna2004
+  linkedin.com/in/puneet-chandna
 
 ` + MenuActiveStyle.Render("WEBSITE") + `
   puneetchandna.com

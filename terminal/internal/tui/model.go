@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/puneet/terminal-portfolio/internal/data"
@@ -30,6 +31,7 @@ type Model struct {
 	MenuIndex    int
 	Projects     []data.Project
 	Bio          string
+	Experience   string
 
 	// Contact form
 	ContactInputs []textinput.Model
@@ -37,6 +39,13 @@ type Model struct {
 	SendingFrame  int
 	ShowHelp      bool
 	ProjectIndex  int // For scrolling through projects
+
+	// Scrollable viewport
+	Viewport      viewport.Model
+	ViewportReady bool
+
+	// Animation frame for nav hints
+	NavHintFrame int
 }
 
 type tickMsg time.Time
@@ -60,6 +69,10 @@ func NewModel() Model {
 	msgInput.CharLimit = 500
 	msgInput.Width = 40
 
+	// Initialize viewport with default dimensions
+	vp := viewport.New(60, 15)
+	vp.Style = lipgloss.NewStyle()
+
 	return Model{
 		Width:         80,
 		Height:        24,
@@ -69,10 +82,14 @@ func NewModel() Model {
 		MenuIndex:     0,
 		Projects:      data.GetProjects(),
 		Bio:           data.GetBio(),
+		Experience:    data.GetExperience(),
 		ContactInputs: []textinput.Model{nameInput, emailInput, msgInput},
 		ContactFocus:  0,
 		ShowHelp:      false,
 		ProjectIndex:  0,
+		Viewport:      vp,
+		ViewportReady: false,
+		NavHintFrame:  0,
 	}
 }
 
@@ -87,7 +104,7 @@ func tickCmd() tea.Cmd {
 }
 
 func (m Model) ActiveTab() string {
-	tabs := []string{"about", "projects", "contact", "exit"}
+	tabs := []string{"about", "experience", "projects", "contact", "exit"}
 	if m.MenuIndex >= 0 && m.MenuIndex < len(tabs) {
 		return tabs[m.MenuIndex]
 	}

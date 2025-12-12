@@ -14,6 +14,32 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.Width = msg.Width
 		m.Height = msg.Height
+
+		// Calculate viewport dimensions based on new window size
+		headerHeight := 2
+		footerHeight := 2
+		menuWidth := 22
+		if m.Width < 60 {
+			menuWidth = 16
+		}
+		inspectorWidth := 0
+		if m.Width > 100 {
+			inspectorWidth = 26
+		}
+
+		viewportWidth := m.Width - menuWidth - inspectorWidth - 8
+		if viewportWidth < 20 {
+			viewportWidth = 20
+		}
+		viewportHeight := m.Height - headerHeight - footerHeight - 4
+		if viewportHeight < 5 {
+			viewportHeight = 5
+		}
+
+		m.Viewport.Width = viewportWidth
+		m.Viewport.Height = viewportHeight
+		m.ViewportReady = true
+
 		return m, nil
 
 	case tickMsg:
@@ -31,6 +57,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Update text inputs when in contact form
 	if m.State == StateContactForm {
 		return m.updateContactInputs(msg)
+	}
+
+	// Also update viewport messages for scrolling in main state
+	if m.State == StateMain {
+		var cmd tea.Cmd
+		m.Viewport, cmd = m.Viewport.Update(msg)
+		return m, cmd
 	}
 
 	return m, nil
@@ -91,7 +124,7 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "down", "j":
 		if m.ActiveTab() == "projects" && m.ProjectIndex < len(m.Projects)-1 {
 			m.ProjectIndex++
-		} else if m.MenuIndex < 3 {
+		} else if m.MenuIndex < 4 {
 			m.MenuIndex++
 		}
 
@@ -106,13 +139,13 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 
 	case "left", "h":
-		if m.ProjectIndex > 0 {
-			m.ProjectIndex--
+		if m.MenuIndex > 0 {
+			m.MenuIndex--
 		}
 
 	case "right", "l":
-		if m.ProjectIndex < len(m.Projects)-1 {
-			m.ProjectIndex++
+		if m.MenuIndex < 4 {
+			m.MenuIndex++
 		}
 	}
 
@@ -201,6 +234,11 @@ func (m Model) handleTick() (tea.Model, tea.Cmd) {
 				return sendDoneMsg{}
 			}
 		}
+		return m, tickCmd()
+
+	case StateMain:
+		// Animate nav hint pulse
+		m.NavHintFrame++
 		return m, tickCmd()
 	}
 
