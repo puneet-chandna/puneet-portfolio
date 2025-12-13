@@ -38,7 +38,7 @@ jobs:
           retention-days: 1
 
   deploy:
-    name: Deploy to GCP VM
+    name: Deploy to AWS EC2
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -50,35 +50,35 @@ jobs:
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.GCP_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.GCP_VM_IP }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          # Use port 2222 for admin SSH (system SSH moved to 2222)
+          ssh-keyscan -p 2222 -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      - name: Deploy to VM
+      - name: Deploy to EC2
         env:
-          VM_USER: ${{ secrets.GCP_VM_USER }}
-          VM_IP: ${{ secrets.GCP_VM_IP }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
           # Stop the service
-          ssh -o StrictHostKeyChecking=no $VM_USER@$VM_IP "sudo systemctl stop portfolio || true"
+          ssh -p 2222 -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "sudo systemctl stop portfolio || true"
 
           # Upload new binary
-          scp -o StrictHostKeyChecking=no ${{ env.BINARY_NAME }} $VM_USER@$VM_IP:/tmp/
+          scp -P 2222 -o StrictHostKeyChecking=no ${{ env.BINARY_NAME }} $EC2_USER@$EC2_HOST:/tmp/
 
           # Move binary and set permissions
-          ssh -o StrictHostKeyChecking=no $VM_USER@$VM_IP "sudo mv /tmp/${{ env.BINARY_NAME }} /opt/terminal-portfolio/ && sudo chmod +x /opt/terminal-portfolio/${{ env.BINARY_NAME }}"
+          ssh -p 2222 -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "sudo mv /tmp/${{ env.BINARY_NAME }} /opt/terminal-portfolio/ && sudo chmod +x /opt/terminal-portfolio/${{ env.BINARY_NAME }}"
 
           # Start the service
-          ssh -o StrictHostKeyChecking=no $VM_USER@$VM_IP "sudo systemctl start portfolio"
+          ssh -p 2222 -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "sudo systemctl start portfolio"
 
           # Wait and check status
           sleep 3
-          ssh -o StrictHostKeyChecking=no $VM_USER@$VM_IP "sudo systemctl status portfolio --no-pager"
+          ssh -p 2222 -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "sudo systemctl status portfolio --no-pager"
 
       - name: Verify Deployment
         env:
-          VM_IP: ${{ secrets.GCP_VM_IP }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
-          echo "Testing SSH connection to portfolio..."
-          # Simple connection test (will fail but we just check if port is open)
-          timeout 5 bash -c "echo '' | nc -v $VM_IP 22" || echo "Port 22 is responding"
+          echo "Testing SSH connection to portfolio on port 22..."
+          timeout 5 bash -c "echo '' | nc -v $EC2_HOST 22" || echo "Port 22 is responding"
