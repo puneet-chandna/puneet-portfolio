@@ -31,11 +31,11 @@ func (m Model) View() string {
 
 func (m Model) renderBoot() string {
 	frame := spinnerFrames[m.BootFrame%len(spinnerFrames)]
-	spinner := BootSpinnerStyle.Render(frame)
-	text := DimStyle.Render(" Establishing secure link to PUNEET-MAINFRAME...")
+	spinner := m.Styles.BootSpinner.Render(frame)
+	text := m.Styles.Dim.Render(" Establishing secure link to PUNEET-MAINFRAME...")
 
 	// Use a style without MarginBottom for ASCII art so lines are adjacent
-	asciiStyle := TitleStyle.MarginBottom(0)
+	asciiStyle := m.Styles.Title.MarginBottom(0)
 	asciiTitle := asciiStyle.Render("█▀█ █░█ █▄░█ █▀▀ █▀▀ ▀█▀ ▄▄ █▀█ █▀\n█▀▀ █▄█ █░▀█ ██▄ ██▄ ░█░ ░░ █▄█ ▄█")
 
 	content := lipgloss.JoinVertical(lipgloss.Center,
@@ -55,7 +55,7 @@ func (m Model) renderLoading() string {
 	filled := (m.BootProgress * barWidth) / 100
 	empty := barWidth - filled
 
-	bar := BootProgressStyle.Render("[" +
+	bar := m.Styles.BootProgress.Render("[" +
 		strings.Repeat("█", filled) +
 		strings.Repeat("░", empty) + "]")
 
@@ -75,11 +75,11 @@ func (m Model) renderLoading() string {
 
 	content := lipgloss.JoinVertical(lipgloss.Center,
 		"",
-		TitleStyle.Render("SYSTEM INITIALIZATION"),
+		m.Styles.Title.Render("SYSTEM INITIALIZATION"),
 		"",
 		bar+percent,
 		"",
-		DimStyle.Render(status),
+		m.Styles.Dim.Render(status),
 		"",
 	)
 
@@ -90,9 +90,9 @@ func (m Model) renderAccessGranted() string {
 	content := lipgloss.JoinVertical(lipgloss.Center,
 		"",
 		"",
-		BootAccessGrantedStyle.Render("▓▓▓ ACCESS GRANTED ▓▓▓"),
+		m.Styles.BootAccessGranted.Render("▓▓▓ ACCESS GRANTED ▓▓▓"),
 		"",
-		SuccessStyle.Render("Welcome, Operator"),
+		m.Styles.Success.Render("Welcome, Operator"),
 		"",
 		"",
 	)
@@ -117,7 +117,7 @@ func (m Model) renderContactForm() string {
 		if i == m.ContactFocus {
 			style = focusedInputStyle
 		}
-		label := DimStyle.Render(labels[i])
+		label := m.Styles.Dim.Render(labels[i])
 		inputs = append(inputs, label+"\n"+style.Render(input.View()))
 	}
 
@@ -125,13 +125,13 @@ func (m Model) renderContactForm() string {
 
 	content := lipgloss.JoinVertical(lipgloss.Center,
 		"",
-		TitleStyle.Render("╔═══ SECURE UPLINK ═══╗"),
+		m.Styles.Title.Render("╔═══ SECURE UPLINK ═══╗"),
 		"",
-		SubtitleStyle.Render("Establish direct communication channel"),
+		m.Styles.Subtitle.Render("Establish direct communication channel"),
 		"",
 		formContent,
 		"",
-		DimStyle.Render("[Tab] Next  [Enter] Transmit  [Esc] Abort"),
+		m.Styles.Dim.Render("[Tab] Next  [Enter] Transmit  [Esc] Abort"),
 		"",
 	)
 
@@ -146,10 +146,10 @@ func (m Model) renderContactSending() string {
 	var encryptedBar string
 	for i := 0; i < barWidth; i++ {
 		if i < progress {
-			encryptedBar += SuccessStyle.Render("█")
+			encryptedBar += m.Styles.Success.Render("█")
 		} else {
 			char := encryptChars[(m.SendingFrame+i)%len(encryptChars)]
-			encryptedBar += BootSpinnerStyle.Render(char)
+			encryptedBar += m.Styles.BootSpinner.Render(char)
 		}
 	}
 
@@ -168,11 +168,11 @@ func (m Model) renderContactSending() string {
 	content := lipgloss.JoinVertical(lipgloss.Center,
 		"",
 		"",
-		TitleStyle.Render("▓▓▓ TRANSMISSION IN PROGRESS ▓▓▓"),
+		m.Styles.Title.Render("▓▓▓ TRANSMISSION IN PROGRESS ▓▓▓"),
 		"",
 		"["+encryptedBar+"]",
 		"",
-		DimStyle.Render(statusText),
+		m.Styles.Dim.Render(statusText),
 		"",
 		"",
 	)
@@ -184,16 +184,16 @@ func (m Model) renderContactSent() string {
 	content := lipgloss.JoinVertical(lipgloss.Center,
 		"",
 		"",
-		SuccessStyle.Render("████████████████████████████████"),
+		m.Styles.Success.Render("████████████████████████████████"),
 		"",
-		BootAccessGrantedStyle.Render("  ✓ TRANSMISSION COMPLETE  "),
+		m.Styles.BootAccessGranted.Render("  ✓ TRANSMISSION COMPLETE  "),
 		"",
-		SuccessStyle.Render("████████████████████████████████"),
+		m.Styles.Success.Render("████████████████████████████████"),
 		"",
-		DimStyle.Render("Message encrypted and delivered"),
-		DimStyle.Render("Operator will respond shortly"),
+		m.Styles.Dim.Render("Message encrypted and delivered"),
+		m.Styles.Dim.Render("Operator will respond shortly"),
 		"",
-		SubtitleStyle.Render("Press any key to continue..."),
+		m.Styles.Subtitle.Render("Press any key to continue..."),
 		"",
 	)
 
@@ -243,26 +243,26 @@ func (m Model) renderMain() string {
 
 func (m Model) renderHelpOverlay() string {
 	helpContent := lipgloss.JoinVertical(lipgloss.Left,
-		TitleStyle.Render("╔═══ KEYBOARD SHORTCUTS ═══╗"),
+		m.Styles.Title.Render("╔═══ KEYBOARD SHORTCUTS ═══╗"),
 		"",
-		MenuActiveStyle.Render("Navigation"),
-		DimStyle.Render("  ↑/k     Move up"),
-		DimStyle.Render("  ↓/j     Move down"),
-		DimStyle.Render("  ←/h     Previous project"),
-		DimStyle.Render("  →/l     Next project"),
-		DimStyle.Render("  Enter   Select/Confirm"),
+		m.Styles.MenuActive.Render("Navigation"),
+		m.Styles.Dim.Render("  ↑/k     Move up"),
+		m.Styles.Dim.Render("  ↓/j     Move down"),
+		m.Styles.Dim.Render("  ←/h     Previous project"),
+		m.Styles.Dim.Render("  →/l     Next project"),
+		m.Styles.Dim.Render("  Enter   Select/Confirm"),
 		"",
-		MenuActiveStyle.Render("General"),
-		DimStyle.Render("  ?       Toggle this help"),
-		DimStyle.Render("  q       Disconnect"),
-		DimStyle.Render("  Ctrl+C  Force quit"),
+		m.Styles.MenuActive.Render("General"),
+		m.Styles.Dim.Render("  ?       Toggle this help"),
+		m.Styles.Dim.Render("  q       Disconnect"),
+		m.Styles.Dim.Render("  Ctrl+C  Force quit"),
 		"",
-		MenuActiveStyle.Render("Contact Form"),
-		DimStyle.Render("  Tab     Next field"),
-		DimStyle.Render("  Esc     Cancel"),
-		DimStyle.Render("  Enter   Send message"),
+		m.Styles.MenuActive.Render("Contact Form"),
+		m.Styles.Dim.Render("  Tab     Next field"),
+		m.Styles.Dim.Render("  Esc     Cancel"),
+		m.Styles.Dim.Render("  Enter   Send message"),
 		"",
-		SubtitleStyle.Render("Press ? to close"),
+		m.Styles.Subtitle.Render("Press ? to close"),
 	)
 
 	boxStyle := lipgloss.NewStyle().
@@ -280,10 +280,10 @@ func (m Model) renderMenu(width, height int) string {
 	var menuItems []string
 	for i, item := range items {
 		cursor := "  "
-		style := MenuInactiveStyle
+		style := m.Styles.MenuInactive
 		if i == m.MenuIndex {
 			cursor = "▸ "
-			style = MenuActiveStyle
+			style = m.Styles.MenuActive
 		}
 		menuItems = append(menuItems, cursor+style.Render(item))
 	}
@@ -291,10 +291,10 @@ func (m Model) renderMenu(width, height int) string {
 	menu := lipgloss.JoinVertical(lipgloss.Left, menuItems...)
 
 	// Add system stats at bottom
-	stats := DimStyle.Render("\n\n━━━━━━━━━━━━━━━━\nSYS STATS:\nCPU: 12%\nMEM: 64MB\nUPTIME: 24d")
+	stats := m.Styles.Dim.Render("\n\n━━━━━━━━━━━━━━━━\nSYS STATS:\nCPU: 12%\nMEM: 64MB\nUPTIME: 24d")
 	menu = lipgloss.JoinVertical(lipgloss.Left, menu, stats)
 
-	return MenuStyle.Width(width).Height(height).Render(menu)
+	return m.Styles.Menu.Width(width).Height(height).Render(menu)
 }
 
 func (m Model) renderViewport(width, height int) string {
@@ -311,7 +311,7 @@ func (m Model) renderViewport(width, height int) string {
 		content = m.renderContactInfo()
 	case "exit":
 		content = "\n\nPress Enter to disconnect from PUNEET-OS\n\n" +
-			DimStyle.Render("Thank you for visiting.")
+			m.Styles.Dim.Render("Thank you for visiting.")
 	}
 
 	// Wrap content to fit viewport width
@@ -322,34 +322,34 @@ func (m Model) renderViewport(width, height int) string {
 	wrapped := lipgloss.NewStyle().Width(contentWidth).Render(content)
 
 	// Add navigation hint
-	navHint := DimStyle.Render("\n[ ↑↓ Navigate Menu ]")
+	navHint := m.Styles.Dim.Render("\n[ ↑↓ Navigate Menu ]")
 
-	return ViewportStyle.Width(width).Height(height).Render(wrapped + navHint)
+	return m.Styles.Viewport.Width(width).Height(height).Render(wrapped + navHint)
 }
 
 // renderExperience renders the experience/work history section
 func (m Model) renderExperience() string {
 	var lines []string
 
-	lines = append(lines, TitleStyle.Render("MISSION LOG"))
+	lines = append(lines, m.Styles.Title.Render("MISSION LOG"))
 	lines = append(lines, "")
 
 	// Experience entries
-	lines = append(lines, MenuActiveStyle.Render("Research Intern")+" @ CeAT, VIT")
-	lines = append(lines, DimStyle.Render("  May-Jul 2025"))
+	lines = append(lines, m.Styles.MenuActive.Render("Research Intern")+" @ CeAT, VIT")
+	lines = append(lines, m.Styles.Dim.Render("  May-Jul 2025"))
 	lines = append(lines, "  CloudSim Plus framework for")
 	lines = append(lines, "  VM placement optimization")
 	lines = append(lines, "")
 
-	lines = append(lines, MenuActiveStyle.Render("Full Stack Developer")+" @ Daira")
-	lines = append(lines, DimStyle.Render("  Dec 2024 - Feb 2025"))
-	lines = append(lines, "  Backend APIs, "+SuccessStyle.Render("30%")+" faster")
+	lines = append(lines, m.Styles.MenuActive.Render("Full Stack Developer")+" @ Daira")
+	lines = append(lines, m.Styles.Dim.Render("  Dec 2024 - Feb 2025"))
+	lines = append(lines, "  Backend APIs, "+m.Styles.Success.Render("30%")+" faster")
 	lines = append(lines, "  data retrieval")
 	lines = append(lines, "")
 
-	lines = append(lines, MenuActiveStyle.Render("Web Dev Intern")+" @ IIT Bombay")
-	lines = append(lines, DimStyle.Render("  Sept-Oct 2024"))
-	lines = append(lines, "  Reduced payload by "+SuccessStyle.Render("90%"))
+	lines = append(lines, m.Styles.MenuActive.Render("Web Dev Intern")+" @ IIT Bombay")
+	lines = append(lines, m.Styles.Dim.Render("  Sept-Oct 2024"))
+	lines = append(lines, "  Reduced payload by "+m.Styles.Success.Render("90%"))
 	lines = append(lines, "  Optimized DB queries")
 
 	return strings.Join(lines, "\n")
@@ -360,96 +360,96 @@ func (m Model) renderColorizedBio() string {
 	var lines []string
 
 	// Operator header
-	lines = append(lines, TitleStyle.Render("╔══════════════════════════════╗"))
-	lines = append(lines, TitleStyle.Render("║  OPERATOR: PUNEET CHANDNA    ║"))
-	lines = append(lines, TitleStyle.Render("╚══════════════════════════════╝"))
+	lines = append(lines, m.Styles.Title.Render("╔══════════════════════════════╗"))
+	lines = append(lines, m.Styles.Title.Render("║  OPERATOR: PUNEET CHANDNA    ║"))
+	lines = append(lines, m.Styles.Title.Render("╚══════════════════════════════╝"))
 	lines = append(lines, "")
 
 	// Status line with colors
-	lines = append(lines, "> STATUS: "+SuccessStyle.Render("ONLINE"))
-	lines = append(lines, "> ROLE: "+MenuActiveStyle.Render("SOFTWARE ENGINEER")+" | "+MenuActiveStyle.Render("FULL STACK DEV"))
-	lines = append(lines, "> LOCATION: "+DimStyle.Render("VIT CHENNAI, INDIA"))
-	lines = append(lines, "> GRADUATION: "+AccentTextStyle.Render("2026"))
+	lines = append(lines, "> STATUS: "+m.Styles.Success.Render("ONLINE"))
+	lines = append(lines, "> ROLE: "+m.Styles.MenuActive.Render("SOFTWARE ENGINEER")+" | "+m.Styles.MenuActive.Render("FULL STACK DEV"))
+	lines = append(lines, "> LOCATION: "+m.Styles.Dim.Render("VIT CHENNAI, INDIA"))
+	lines = append(lines, "> GRADUATION: "+m.Styles.AccentText.Render("2026"))
 	lines = append(lines, "")
 
 	// Tech Arsenal - responsive grid
-	lines = append(lines, TitleStyle.Render("TECH ARSENAL:"))
-	lines = append(lines, "  "+MenuActiveStyle.Render("Python")+"  "+MenuActiveStyle.Render("JavaScript")+"  "+MenuActiveStyle.Render("Go"))
-	lines = append(lines, "  "+DimStyle.Render("C++")+"     "+DimStyle.Render("Node.js")+"     "+DimStyle.Render("React"))
-	lines = append(lines, "  "+DimStyle.Render("Next.js")+" "+DimStyle.Render("MongoDB")+"     "+DimStyle.Render("PostgreSQL"))
-	lines = append(lines, "  "+AccentTextStyle.Render("AWS/GCP")+" "+AccentTextStyle.Render("Docker")+"      "+AccentTextStyle.Render("Linux/Git"))
+	lines = append(lines, m.Styles.Title.Render("TECH ARSENAL:"))
+	lines = append(lines, "  "+m.Styles.MenuActive.Render("Python")+"  "+m.Styles.MenuActive.Render("JavaScript")+"  "+m.Styles.MenuActive.Render("Go"))
+	lines = append(lines, "  "+m.Styles.Dim.Render("C++")+"     "+m.Styles.Dim.Render("Node.js")+"     "+m.Styles.Dim.Render("React"))
+	lines = append(lines, "  "+m.Styles.Dim.Render("Next.js")+" "+m.Styles.Dim.Render("MongoDB")+"     "+m.Styles.Dim.Render("PostgreSQL"))
+	lines = append(lines, "  "+m.Styles.AccentText.Render("AWS/GCP")+" "+m.Styles.AccentText.Render("Docker")+"      "+m.Styles.AccentText.Render("Linux/Git"))
 	lines = append(lines, "")
 
 	// Core Competencies
-	lines = append(lines, TitleStyle.Render("CORE COMPETENCIES:"))
-	lines = append(lines, "  • "+SuccessStyle.Render("Full Stack Dev")+" & APIs")
+	lines = append(lines, m.Styles.Title.Render("CORE COMPETENCIES:"))
+	lines = append(lines, "  • "+m.Styles.Success.Render("Full Stack Dev")+" & APIs")
 	lines = append(lines, "  • Data Structures & Algo")
 	lines = append(lines, "  • System Design")
-	lines = append(lines, "  • "+AccentTextStyle.Render("Cryptography")+" (AES)")
+	lines = append(lines, "  • "+m.Styles.AccentText.Render("Cryptography")+" (AES)")
 	lines = append(lines, "  • Cloud Computing")
 	lines = append(lines, "")
 
-	lines = append(lines, SubtitleStyle.Render("> \"Building performant &"))
-	lines = append(lines, SubtitleStyle.Render("   elegant software.\""))
+	lines = append(lines, m.Styles.Subtitle.Render("> \"Building performant &"))
+	lines = append(lines, m.Styles.Subtitle.Render("   elegant software.\""))
 
 	return strings.Join(lines, "\n")
 }
 
 func (m Model) renderProjectList() string {
 	var lines []string
-	lines = append(lines, TitleStyle.Render("╔═══ PROJECT DATABASE ═══╗"))
+	lines = append(lines, m.Styles.Title.Render("╔═══ PROJECT DATABASE ═══╗"))
 	lines = append(lines, "")
 
 	for i, p := range m.Projects {
 		status := p.Status
-		statusStyle := DimStyle
+		statusStyle := m.Styles.Dim
 		if status == "Live" {
-			statusStyle = SuccessStyle
+			statusStyle = m.Styles.Success
 		} else if status == "WIP" {
-			statusStyle = AccentTextStyle
+			statusStyle = m.Styles.AccentText
 		}
 
 		// Highlight selected project
-		numStyle := DimStyle
-		nameStyle := MenuInactiveStyle
+		numStyle := m.Styles.Dim
+		nameStyle := m.Styles.MenuInactive
 		if i == m.ProjectIndex {
-			numStyle = MenuActiveStyle
-			nameStyle = MenuActiveStyle
+			numStyle = m.Styles.MenuActive
+			nameStyle = m.Styles.MenuActive
 		}
 
 		lines = append(lines, numStyle.Render(fmt.Sprintf("%d. ", i+1))+nameStyle.Render(p.Name))
-		lines = append(lines, "   "+DimStyle.Render(p.Description))
+		lines = append(lines, "   "+m.Styles.Dim.Render(p.Description))
 		lines = append(lines, "   Status: "+statusStyle.Render(status))
 		lines = append(lines, "")
 	}
 
-	lines = append(lines, DimStyle.Render("[↑↓] Select project  [←→] Navigate"))
+	lines = append(lines, m.Styles.Dim.Render("[↑↓] Select project  [←→] Navigate"))
 
 	return strings.Join(lines, "\n")
 }
 
 func (m Model) renderContactInfo() string {
-	return TitleStyle.Render("╔═══ UPLINK TERMINAL ═══╗") + `
+	return m.Styles.Title.Render("╔═══ UPLINK TERMINAL ═══╗") + `
 
 Establish communication via secure channels:
 
-` + MenuActiveStyle.Render("EMAIL") + `
+` + m.Styles.MenuActive.Render("EMAIL") + `
   puneetchandna@zohomail.in
 
-` + MenuActiveStyle.Render("GITHUB") + `
+` + m.Styles.MenuActive.Render("GITHUB") + `
   github.com/puneet-chandna
 
-` + MenuActiveStyle.Render("LINKEDIN") + `
+` + m.Styles.MenuActive.Render("LINKEDIN") + `
   linkedin.com/in/puneet-chandna
 
-` + MenuActiveStyle.Render("WEBSITE") + `
+` + m.Styles.MenuActive.Render("WEBSITE") + `
   puneetchandna.com
 
-` + DimStyle.Render(`
+` + m.Styles.Dim.Render(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 > Encrypted channel ready`) + `
 
-` + AccentTextStyle.Render("Press [Enter] to open secure uplink form")
+` + m.Styles.AccentText.Render("Press [Enter] to open secure uplink form")
 }
 
 func (m Model) renderInspector(width, height int) string {
@@ -457,34 +457,34 @@ func (m Model) renderInspector(width, height int) string {
 
 	switch m.ActiveTab() {
 	case "about":
-		content = TitleStyle.Render("OPERATOR FILE") + "\n\n" +
+		content = m.Styles.Title.Render("OPERATOR FILE") + "\n\n" +
 			"Name: Puneet\n" +
 			"Role: Engineer\n" +
-			"Status: " + SuccessStyle.Render("Active")
+			"Status: " + m.Styles.Success.Render("Active")
 
 	case "projects":
 		if len(m.Projects) > 0 && m.ProjectIndex < len(m.Projects) {
 			p := m.Projects[m.ProjectIndex]
-			content = TitleStyle.Render("DETAILS") + "\n\n" +
+			content = m.Styles.Title.Render("DETAILS") + "\n\n" +
 				"Stack:\n"
 			for _, s := range p.Stack {
 				content += "  • " + s + "\n"
 			}
 			content += "\nYear: " + fmt.Sprint(p.Year)
 			if p.URL != "" {
-				content += "\n\n" + DimStyle.Render("URL:\n"+p.URL)
+				content += "\n\n" + m.Styles.Dim.Render("URL:\n"+p.URL)
 			}
 		}
 
 	case "contact":
-		content = TitleStyle.Render("UPLINK STATUS") + "\n\n" +
-			SuccessStyle.Render("● Channel Open") + "\n\n" +
-			DimStyle.Render("Latency: 42ms\nEncryption: AES-256")
+		content = m.Styles.Title.Render("UPLINK STATUS") + "\n\n" +
+			m.Styles.Success.Render("● Channel Open") + "\n\n" +
+			m.Styles.Dim.Render("Latency: 42ms\nEncryption: AES-256")
 
 	case "exit":
-		content = AccentTextStyle.Render("DISCONNECT?") + "\n\n" +
-			DimStyle.Render("Press Enter\nto confirm")
+		content = m.Styles.AccentText.Render("DISCONNECT?") + "\n\n" +
+			m.Styles.Dim.Render("Press Enter\nto confirm")
 	}
 
-	return InspectorStyle.Width(width).Height(height).Render(content)
+	return m.Styles.Inspector.Width(width).Height(height).Render(content)
 }

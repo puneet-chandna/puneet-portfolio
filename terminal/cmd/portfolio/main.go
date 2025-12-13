@@ -83,7 +83,13 @@ func main() {
 
 func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	pty, _, _ := s.Pty()
-	m := tui.NewModel()
+
+	// Create a renderer for this SSH session
+	// This correctly detects the client's color capabilities
+	renderer := bubbletea.MakeRenderer(s)
+
+	// Create model with session-specific styles
+	m := tui.NewModelWithRenderer(renderer)
 	m.Width = pty.Window.Width
 	m.Height = pty.Window.Height
 

@@ -46,13 +46,23 @@ type Model struct {
 
 	// Animation frame for nav hints
 	NavHintFrame int
+
+	// Per-session styles (for proper SSH color rendering)
+	Styles Styles
 }
 
 type tickMsg time.Time
 type bootDoneMsg struct{}
 type sendDoneMsg struct{}
 
+// NewModel creates a model with default styles (for local testing)
 func NewModel() Model {
+	return NewModelWithRenderer(lipgloss.DefaultRenderer())
+}
+
+// NewModelWithRenderer creates a model with styles from the given renderer
+// For SSH sessions, use bubbletea.MakeRenderer(s) for proper color support
+func NewModelWithRenderer(r *lipgloss.Renderer) Model {
 	// Create text inputs for contact form
 	nameInput := textinput.New()
 	nameInput.Placeholder = "Your callsign..."
@@ -90,6 +100,7 @@ func NewModel() Model {
 		Viewport:      vp,
 		ViewportReady: false,
 		NavHintFrame:  0,
+		Styles:        NewStyles(r),
 	}
 }
 
@@ -112,12 +123,12 @@ func (m Model) ActiveTab() string {
 }
 
 func (m Model) GetHeader() string {
-	status := SuccessStyle.Render("● ONLINE")
+	status := m.Styles.Success.Render("● ONLINE")
 	tab := "/" + m.ActiveTab()
-	title := TitleStyle.Render("PUNEET-OS v1.0")
+	title := m.Styles.Title.Render("PUNEET-OS v1.0")
 
 	left := title
-	center := DimStyle.Render(tab)
+	center := m.Styles.Dim.Render(tab)
 	right := status
 
 	leftWidth := lipgloss.Width(left)
@@ -135,25 +146,25 @@ func (m Model) GetHeader() string {
 		right,
 	)
 
-	return HeaderStyle.Width(m.Width).Render(header)
+	return m.Styles.Header.Width(m.Width).Render(header)
 }
 
 func (m Model) GetFooter() string {
 	var controls string
 	switch m.State {
 	case StateContactForm:
-		controls = DimStyle.Render("[Tab] Next field  [Enter] Send  [Esc] Back")
+		controls = m.Styles.Dim.Render("[Tab] Next field  [Enter] Send  [Esc] Back")
 	case StateMain:
 		if m.ShowHelp {
-			controls = DimStyle.Render("[?] Hide help  [↑↓/jk] Navigate  [Enter] Select  [q] Exit")
+			controls = m.Styles.Dim.Render("[?] Hide help  [↑↓/jk] Navigate  [Enter] Select  [q] Exit")
 		} else {
-			controls = DimStyle.Render("[?] Help  [↑↓/jk] Navigate  [Enter] Select  [q] Exit")
+			controls = m.Styles.Dim.Render("[?] Help  [↑↓/jk] Navigate  [Enter] Select  [q] Exit")
 		}
 	default:
-		controls = DimStyle.Render("[↑↓/jk] Navigate  [Enter] Select  [q] Exit")
+		controls = m.Styles.Dim.Render("[↑↓/jk] Navigate  [Enter] Select  [q] Exit")
 	}
 
-	pos := DimStyle.Render("Ln 1, Col 1")
+	pos := m.Styles.Dim.Render("Ln 1, Col 1")
 
 	leftWidth := lipgloss.Width(controls)
 	rightWidth := lipgloss.Width(pos)
@@ -170,5 +181,5 @@ func (m Model) GetFooter() string {
 		pos,
 	)
 
-	return FooterStyle.Width(m.Width).Render(footer)
+	return m.Styles.Footer.Width(m.Width).Render(footer)
 }
