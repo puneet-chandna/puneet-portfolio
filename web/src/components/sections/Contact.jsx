@@ -123,7 +123,7 @@ export default function Contact() {
               For the full hacker experience, connect via SSH:
             </p>
             <div className="ssh-command">
-              <span>$ ssh puneet.sh</span>
+              <span>$ ssh puneet.space</span>
               <button onClick={copySSH} title="Copy to clipboard">
                 {copied ? (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
