@@ -19,6 +19,7 @@ import (
 	"github.com/charmbracelet/wish/bubbletea"
 	"github.com/charmbracelet/wish/logging"
 	"github.com/joho/godotenv"
+	"github.com/muesli/termenv"
 	"github.com/puneet/terminal-portfolio/internal/tui"
 )
 
@@ -41,7 +42,7 @@ func main() {
 		wish.WithAddress(net.JoinHostPort(host, port)),
 		wish.WithHostKeyPath(".ssh/id_ed25519"),
 		wish.WithMiddleware(
-			bubbletea.Middleware(teaHandler),
+			bubbletea.MiddlewareWithColorProfile(teaHandler, termenv.TrueColor),
 			activeterm.Middleware(),
 			logging.Middleware(),
 		),
