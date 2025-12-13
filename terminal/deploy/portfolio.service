@@ -13,6 +13,8 @@ StandardOutput=journal
 StandardError=journal
 # Load environment variables from file
 EnvironmentFile=/opt/terminal-portfolio/.env
+# Set TERM for proper color rendering in SSH sessions
+Environment=TERM=xterm-256color
 # Allow binding to port 22
 AmbientCapabilities=CAP_NET_BIND_SERVICE
 
