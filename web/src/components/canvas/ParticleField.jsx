@@ -20,11 +20,20 @@ export default function ParticleField({ count = 2000 }) {
       positions[i * 3 + 1] = (seededRandom(i * 3 + 1) - 0.5) * 50
       positions[i * 3 + 2] = (seededRandom(i * 3 + 2) - 0.5) * 50
       
-      // Tron colors: cyan to blue gradient
+      // Monochrome with rare colored accents
       const t = seededRandom(i * 7)
-      colors[i * 3] = t * 0 + (1 - t) * 0
-      colors[i * 3 + 1] = t * 0.83 + (1 - t) * 0.4
-      colors[i * 3 + 2] = t * 1 + (1 - t) * 1
+      if (t > 0.95) {
+        // Colored accent (Gold/Orange)
+        colors[i * 3] = 1.0
+        colors[i * 3 + 1] = 0.8
+        colors[i * 3 + 2] = 0.0
+      } else {
+        // White/Gray
+        const val = 0.5 + (t * 0.5) / 0.95 // Scale remaining to 0.5-1.0
+        colors[i * 3] = val
+        colors[i * 3 + 1] = val
+        colors[i * 3 + 2] = val
+      }
     }
     
     return { positions, colors }

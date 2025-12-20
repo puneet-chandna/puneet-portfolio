@@ -31,7 +31,7 @@ export default function GlowingOrbs({ count = 8 }) {
           Math.sin(angle) * radius
         ],
         scale: 0.1 + seededRandom(i * 30) * 0.3,
-        color: i % 2 === 0 ? '#00d4ff' : '#0066ff',
+        color: i % 3 === 0 ? '#FFC837' : '#E0E0E0',
         speed: 0.5 + seededRandom(i * 40) * 1
       }
     })

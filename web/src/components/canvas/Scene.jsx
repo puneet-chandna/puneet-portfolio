@@ -44,11 +44,11 @@ export default function Scene() {
     <div className="canvas-container">
       <Canvas>
         <PerspectiveCamera makeDefault position={[0, 5, 20]} fov={60} />
-        <color attach="background" args={['#0a0a0f']} />
-        <fog attach="fog" args={['#0a0a0f', 20, 60]} />
+        <color attach="background" args={['#050505']} />
+        <fog attach="fog" args={['#050505', 20, 60]} />
         
         <ambientLight intensity={0.2} />
-        <pointLight position={[10, 10, 10]} intensity={0.5} color="#00d4ff" />
+        <pointLight position={[10, 10, 10]} intensity={0.5} color="#ffffff" />
         
         <Suspense fallback={null}>
           <ParticleField count={1500} />

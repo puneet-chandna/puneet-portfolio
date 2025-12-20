@@ -46,7 +46,7 @@ export default function TronGrid({ size = 100, divisions = 50 }) {
           />
         </bufferGeometry>
         <lineBasicMaterial
-          color="#00d4ff"
+          color="#333333"
           transparent
           opacity={0.3}
           blending={THREE.AdditiveBlending}
@@ -57,7 +57,7 @@ export default function TronGrid({ size = 100, divisions = 50 }) {
       <mesh position={[0, -4.9, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[0.5, size]} />
         <meshBasicMaterial
-          color="#00d4ff"
+          color="#FFC837"
           transparent
           opacity={0.5}
           blending={THREE.AdditiveBlending}

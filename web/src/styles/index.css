@@ -1,13 +1,20 @@
 :root {
-  --bg-dark: #0a0a0f;
-  --bg-card: #0d0d14;
-  --primary: #00d4ff;
-  --secondary: #0066ff;
+  --bg-dark: #050505;
+  --bg-card: #0a0a0a;
+  --primary: #ffffff;
+  --secondary: #a0a0a0;
   --accent: #ff6600;
+  --colored-accent: linear-gradient(
+    135deg,
+    #ff3cac 0%,
+    #784ba0 50%,
+    #2b86c5 100%
+  ); /* Graphite inspired gradient */
+  --colored-accent-solid: #ff3cac;
   --success: #00ff88;
-  --text: #e0e0e0;
-  --text-dim: #6a6a7a;
-  --dim: #3a3a4a;
+  --text: #ffffff;
+  --text-dim: #666666;
+  --dim: #222222;
 }
 
 * {
@@ -95,7 +102,7 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin-bottom: 1rem;
-  text-shadow: 0 0 60px rgba(0, 212, 255, 0.3);
+  text-shadow: 0 0 60px rgba(255, 255, 255, 0.3);
 }
 
 .hero .tagline {
@@ -133,7 +140,7 @@ body {
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.2);
 }
 
 .btn-outline {
@@ -159,7 +166,7 @@ body {
 .card:hover {
   border-color: var(--primary);
   transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0, 212, 255, 0.1);
+  box-shadow: 0 20px 40px rgba(255, 255, 255, 0.05);
 }
 
 /* Section titles */
@@ -178,7 +185,7 @@ body {
   left: 0;
   width: 60px;
   height: 4px;
-  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  background: var(--colored-accent);
   border-radius: 2px;
 }
 
@@ -235,12 +242,7 @@ body {
   top: 0;
   bottom: 0;
   width: 2px;
-  background: linear-gradient(
-    180deg,
-    var(--primary),
-    var(--secondary),
-    var(--accent)
-  );
+  background: linear-gradient(180deg, var(--primary), var(--secondary));
 }
 
 .timeline-item {
@@ -257,8 +259,8 @@ body {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: var(--primary);
-  box-shadow: 0 0 20px var(--primary);
+  background: var(--colored-accent-solid);
+  box-shadow: 0 0 20px var(--colored-accent-solid);
 }
 
 .timeline-date {
@@ -321,11 +323,25 @@ body {
 
 .tag {
   padding: 4px 12px;
-  background: rgba(0, 212, 255, 0.1);
-  border: 1px solid var(--primary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--dim);
   border-radius: 20px;
   font-size: 0.75rem;
-  color: var(--primary);
+  color: var(--text);
+  position: relative;
+  overflow: hidden;
+}
+
+.tag::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--colored-accent);
+  opacity: 0.1;
+  z-index: -1;
 }
 
 /* Skills */
@@ -409,8 +425,8 @@ body {
 .ssh-banner {
   background: linear-gradient(
     135deg,
-    rgba(0, 212, 255, 0.1),
-    rgba(0, 102, 255, 0.1)
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.02)
   );
   border: 1px solid var(--primary);
   border-radius: 16px;
@@ -539,7 +555,7 @@ body {
 }
 
 .glow-box {
-  box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
 }
 
 /* Loader */
