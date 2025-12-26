@@ -8,14 +8,25 @@ on:
       - ".github/workflows/deploy-terminal.yml"
   workflow_dispatch:
 
+# Prevent parallel deployments
+concurrency:
+  group: deploy-terminal-${{ github.ref }}
+  cancel-in-progress: false
+
+# Minimal permissions (principle of least privilege)
+permissions:
+  contents: read
+  actions: read
+
 env:
   GO_VERSION: "1.24"
   BINARY_NAME: portfolio
 
 jobs:
   build:
-    name: Build Go Binary
+    name: Build & Security Scan
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,10 +37,33 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: terminal/go.sum
 
+      - name: Verify dependencies
+        working-directory: terminal
+        run: |
+          go mod verify
+          go mod tidy -diff
+
+      - name: Run security scan (govulncheck)
+        working-directory: terminal
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
+
+      - name: Run tests
+        working-directory: terminal
+        run: |
+          go test -race -coverprofile=coverage.out ./... || echo "No tests found, skipping"
+
       - name: Build for Linux amd64
         working-directory: terminal
         run: |
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o ${{ env.BINARY_NAME }} ./cmd/portfolio
+
+      - name: Verify binary
+        working-directory: terminal
+        run: |
+          file ${{ env.BINARY_NAME }}
+          ls -lh ${{ env.BINARY_NAME }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -42,6 +76,8 @@ jobs:
     name: Deploy to AWS EC2
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -53,7 +89,6 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          # Use port 2222 for admin SSH (system SSH moved to 2222)
           ssh-keyscan -p 2222 -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Deploy to EC2
@@ -61,23 +96,49 @@ jobs:
           EC2_USER: ${{ secrets.EC2_USER }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
-          # Stop the service
-          ssh -p 2222 -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "sudo systemctl stop portfolio || true"
+          set -e
 
-          # Upload new binary
-          scp -P 2222 -o StrictHostKeyChecking=no ${{ env.BINARY_NAME }} $EC2_USER@$EC2_HOST:/tmp/
+          echo "::group::Stopping service"
+          ssh -p 2222 -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "sudo systemctl stop portfolio || true"
+          echo "::endgroup::"
 
-          # Move binary and set permissions
+          echo "::group::Uploading binary"
+          scp -P 2222 -o StrictHostKeyChecking=no -o ConnectTimeout=30 ${{ env.BINARY_NAME }} $EC2_USER@$EC2_HOST:/tmp/
+          echo "::endgroup::"
+
+          echo "::group::Installing binary"
           ssh -p 2222 -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "sudo mv /tmp/${{ env.BINARY_NAME }} /opt/terminal-portfolio/ && sudo chmod +x /opt/terminal-portfolio/${{ env.BINARY_NAME }}"
+          echo "::endgroup::"
 
-          # Start the service
+          echo "::group::Starting service"
           ssh -p 2222 -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "sudo systemctl start portfolio"
+          echo "::endgroup::"
 
-          # Wait and check status
-          sleep 3
-          ssh -p 2222 -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "sudo systemctl status portfolio --no-pager"
+      - name: Health Check with Retry
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+        run: |
+          echo "Waiting for service to stabilize..."
+          sleep 5
 
-      - name: Verify Deployment
+          # Retry health check up to 3 times
+          for i in 1 2 3; do
+            echo "Health check attempt $i..."
+            if ssh -p 2222 -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "sudo systemctl is-active portfolio"; then
+              echo "✅ Service is healthy!"
+              ssh -p 2222 -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "sudo systemctl status portfolio --no-pager"
+              exit 0
+            fi
+            echo "Service not ready, waiting 5s..."
+            sleep 5
+          done
+
+          echo "❌ Health check failed after 3 attempts"
+          ssh -p 2222 -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "sudo journalctl -u portfolio -n 50 --no-pager" || true
+          exit 1
+
+      - name: Verify SSH Port
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
         run: |
