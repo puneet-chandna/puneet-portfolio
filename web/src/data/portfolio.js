@@ -18,8 +18,8 @@ export const projects = [
   },
   {
     id: 2,
-    name: "High-Performance AES Framework",
-    description: "Reduced encryption time by 51% through parallel processing. Achieved 362 KB/sec throughput with dynamic S-boxes via SHA-512.",
+    name: "Encryption Algorithm Using Dynamic S-boxes",
+    description: "Modified the AES algorithm to reduce encryption time by 51% through parallel processing. Achieved higher throughput  and robust security with dynamic S-boxes via SHA-512.",
     stack: ["Python", "Multiprocessing", "SHA-512", "NumPy"],
     year: 2025,
     status: "Live",
@@ -48,6 +48,16 @@ export const projects = [
   },
   {
     id: 5,
+    name: "Water Brakes",
+    description: "Streamlit app helping farmers optimize water management by analyzing contour maps for swale and trench placement.",
+    stack: ["Streamlit", "Python", "Plotly"],
+    year: 2024,
+    status: "Live",
+    url: "https://water-brakes.streamlit.app/",
+    image: "/projects/water.webp"
+  },
+  {
+    id: 6,
     name: "BookMyEvent",
     description: "Event management app processing ~10,000 ticket authentications per event with real-time QR code scanning via ESP32.",
     stack: ["Node.js", "Express", "Flutter", "MongoDB"],
@@ -55,16 +65,6 @@ export const projects = [
     status: "Live",
     url: "https://github.com/puneet-chandna/bookmyshow_server",
     image: "/projects/event.webp"
-  },
-  {
-    id: 6,
-    name: "Water Brakes",
-    description: "Streamlit app helping farmers optimize water management by analyzing contour maps for swale and trench placement.",
-    stack: ["Streamlit", "Python", "Plotly"],
-    year: 2024,
-    status: "Live",
-    url: "https://github.com/puneet-chandna/water-brakes",
-    image: "/projects/water.webp"
   }
 ];
 
