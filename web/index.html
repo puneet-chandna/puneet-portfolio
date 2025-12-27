@@ -91,34 +91,113 @@
       rel="stylesheet"
     />
     <style>
-      /* Critical CSS for preloader to avoid FOUC */
-      body { background-color: #050505; margin: 0; }
-      .loader {
+      /* Critical CSS for Graphite-style "App Shell" Preloader */
+      body { 
+        background-color: #050505; 
+        margin: 0; 
+        overflow: hidden; /* Prevent scroll during load */
+      }
+
+      /* 1. Instant App Shell Layer (Navbar + Grid) */
+      .app-shell {
         position: fixed;
+        inset: 0;
+        z-index: 9999;
+        pointer-events: none;
+        transition: opacity 0.8s ease-in-out;
+      }
+
+      /* Static Navbar - Matches React Component */
+      .static-navbar {
+        position: absolute;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
-        background: #050505;
+        right: 0;
+        padding: 1rem 5%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(10, 10, 15, 0.8);
+        border-bottom: 1px solid rgba(58, 58, 74, 0.3);
+        height: 80px; /* Approximate height to prevent shift */
+        box-sizing: border-box;
+      }
+
+      .static-logo {
         display: flex;
         align-items: center;
-        justify-content: center;
-        z-index: 9999;
+        font-family: "Inter", sans-serif;
+        font-weight: 700;
+        font-size: 1.2rem;
+        color: #ffffff;
+        gap: 10px;
       }
-      .loader-spinner {
-        width: 50px;
-        height: 50px;
-        border: 3px solid #222222;
-        border-top-color: #ffffff;
+
+      .static-logo img {
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
-        animation: spin 1s linear infinite;
+        border: 2px solid #ffffff;
       }
-      @keyframes spin {
-        to { transform: rotate(360deg); }
+
+      .static-nav-links {
+        display: flex;
+        gap: 2rem;
+        list-style: none;
+      }
+
+      .static-nav-links li {
+        color: #666666;
+        font-family: "Inter", sans-serif;
+        font-weight: 500;
+        font-size: 1rem;
+      }
+
+      @media (max-width: 768px) {
+        .static-nav-links { display: none; }
+      }
+
+      /* The High-Tech Dot Matrix Grid */
+      .grid-background {
+        position: absolute;
+        inset: 0;
+
+        background-image: radial-gradient(white 0.5px, rgba(255, 255, 255, 0.3) 1.5px, transparent 2px);
+        background-size: 150px 150px;
+        opacity: 0.5;
+        z-index: 0; 
+      }
+
+      #root {
+        opacity: 0;
+        transition: opacity 1.2s ease-out;
+      }
+      body.loaded .app-shell {
+        opacity: 0;
+      }
+      
+      body.loaded #root {
+        opacity: 1;
       }
     </style>
   </head>
   <body>
+    <div id="app-shell" class="app-shell">
+      <nav class="static-navbar">
+        <div class="static-logo">
+          <img src="/puneet.webp" alt="Loading..." />
+          <span>Puneet Chandna</span>
+        </div>
+        <ul class="static-nav-links">
+          <li>About</li>
+          <li>Experience</li>
+          <li>Projects</li>
+          <li>Skills</li>
+          <li>Contact</li>
+        </ul>
+      </nav>
+      <div class="grid-background"></div>
+    </div>
     <noscript>
       <div style="padding: 20px; text-align: center; background: #050505; color: #ffffff; min-height: 100vh;">
         <h1>Puneet Chandna - Software Engineer</h1>
@@ -127,11 +206,30 @@
         <p><a href="https://github.com/puneet-chandna" style="color: #ffffff;">GitHub</a> | <a href="https://linkedin.com/in/puneet-chandna" style="color: #ffffff;">LinkedIn</a></p>
       </div>
     </noscript>
-    <div id="root">
-      <div class="loader">
-        <div class="loader-spinner"></div>
-      </div>
-    </div>
+    <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      (function() {
+        const minTime = 1500;
+        const startTime = performance.now();
+        const appShell = document.getElementById('app-shell');
+
+        function revealContent() {
+          const currentTime = performance.now();
+          const elapsedTime = currentTime - startTime;
+          const remainingTime = Math.max(0, minTime - elapsedTime);
+
+          setTimeout(() => {
+            document.body.classList.add('loaded');
+            document.body.style.overflow = '';
+            setTimeout(() => {
+              appShell.style.display = 'none';
+            }, 800); 
+          }, remainingTime);
+        }
+
+        window.addEventListener('load', revealContent);
+      })();
+    </script>
   </body>
 </html>
