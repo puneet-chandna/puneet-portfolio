@@ -80,25 +80,21 @@
     }
     </script>
     
-    <!-- Preconnect for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
     
-    <!-- Fonts -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <style>
-      /* Critical CSS for Graphite-style "App Shell" Preloader */
       body { 
         background-color: #050505; 
         margin: 0; 
-        overflow: hidden; /* Prevent scroll during load */
+        overflow: hidden; 
       }
 
-      /* 1. Instant App Shell Layer (Navbar + Grid) */
       .app-shell {
         position: fixed;
         inset: 0;
@@ -157,7 +153,6 @@
         .static-nav-links { display: none; }
       }
 
-      /* The High-Tech Dot Matrix Grid */
       .grid-background {
         position: absolute;
         inset: 0;
