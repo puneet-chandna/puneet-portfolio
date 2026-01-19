@@ -1,7 +1,7 @@
 {
   "name": "Puneet Chandna",
   "short_name": "Puneet",
-  "description": "Software Engineer & Full Stack Developer",
+  "description": "Software Engineer & Problem Solver",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0f",
@@ -21,7 +21,7 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["portfolio", "developer", "technology"],
+  "categories": ["portfolio", "developer", "technology", "puneet", "puneetchandna","personal website","Puneet Chandna,VIT Chennai,Software Engineer", "Problem Solver"],
   "lang": "en",
   "dir": "ltr"
 }
