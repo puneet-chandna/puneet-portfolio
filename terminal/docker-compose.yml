@@ -1,0 +1,33 @@
+services:
+  portfolio:
+    build: .
+    container_name: terminal-portfolio
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./.ssh:/app/.ssh:ro # SSH host keys (read-only)
+    networks:
+      - tunnel-net
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "22"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared-tunnel
+    restart: unless-stopped
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ${HOME}/.cloudflared:/etc/cloudflared:ro # Tunnel config + credentials
+    networks:
+      - tunnel-net
+    depends_on:
+      portfolio:
+        condition: service_healthy
+
+networks:
+  tunnel-net:
+    driver: bridge
