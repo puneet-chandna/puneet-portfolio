@@ -28,7 +28,12 @@ html {
 }
 
 body {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
     sans-serif;
   background: var(--bg-dark);
   color: var(--text);
@@ -522,6 +527,214 @@ body {
   }
 }
 
+/* Certifications — Spotlight + Marquee */
+.cert-spotlight {
+  position: relative;
+  border-radius: 20px;
+  padding: 2px;
+  background: linear-gradient(135deg, #fbbc04, #ea4335, #4285f4, #34a853, #fbbc04);
+  background-size: 300% 300%;
+  animation: gradientShift 6s ease infinite;
+  margin-bottom: 3rem;
+  max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.cert-spotlight-inner {
+  background: var(--bg-card);
+  border-radius: 18px;
+  padding: 3rem;
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.cert-spotlight-glow {
+  position: absolute;
+  top: 50%;
+  left: 25%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(251, 188, 4, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+}
+
+.cert-badge-wrap {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.cert-badge-img {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 30px rgba(251, 188, 4, 0.3));
+  transition: transform 0.4s ease;
+}
+
+.cert-spotlight:hover .cert-badge-img {
+  transform: scale(1.05) rotate(2deg);
+}
+
+.cert-spotlight-info {
+  position: relative;
+  z-index: 1;
+}
+
+.cert-type-tag {
+  display: inline-block;
+  padding: 4px 14px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #fbbc04;
+  border: 1px solid rgba(251, 188, 4, 0.3);
+  border-radius: 20px;
+  background: rgba(251, 188, 4, 0.08);
+  margin-bottom: 1rem;
+}
+
+.cert-spotlight-title {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+.cert-spotlight-issuer {
+  font-size: 1rem;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+/* ── Marquee ── */
+.cert-marquee-section {
+  margin-bottom: 2.5rem;
+}
+
+.cert-marquee-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  margin-bottom: 1rem;
+}
+
+.cert-marquee-container {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.cert-marquee-track {
+  display: flex;
+  gap: 1rem;
+  width: max-content;
+  animation: marqueeScroll 30s linear infinite;
+}
+
+.cert-marquee-container:hover .cert-marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes marqueeScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.cert-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--dim);
+  border-radius: 100px;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.cert-pill:hover {
+  border-color: var(--pill-color, var(--text-dim));
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.cert-pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pill-color, var(--text-dim));
+  flex-shrink: 0;
+  box-shadow: 0 0 8px var(--pill-color, transparent);
+}
+
+.cert-pill-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.cert-pill-issuer {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  padding-left: 0.5rem;
+  border-left: 1px solid var(--dim);
+}
+
+.cert-cta {
+  text-align: center;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .cert-spotlight-inner {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+    padding: 2rem 1.5rem;
+  }
+
+  .cert-badge-img {
+    width: 120px;
+    height: 120px;
+  }
+
+  .cert-spotlight-glow {
+    left: 50%;
+  }
+
+  .cert-spotlight-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+
 /* Social links */
 .social-links {
   display: flex;
@@ -551,7 +764,9 @@ body {
 
 /* Glow effects */
 .glow {
-  text-shadow: 0 0 20px var(--primary), 0 0 40px var(--primary);
+  text-shadow:
+    0 0 20px var(--primary),
+    0 0 40px var(--primary);
 }
 
 .glow-box {

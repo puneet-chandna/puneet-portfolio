@@ -70,6 +70,13 @@ export const projects = [
 
 export const experience = [
   {
+    id: 0,
+    title: "Backend Engineering Intern",
+    company: "Apoliums Infotech India Pvt. Ltd.",
+    date: "Dec 2025 – Jan 2026",
+    description: "Migrated legacy Node.js services to Golang (Gin) and optimized MySQL schemas, reducing API latency and enhancing concurrency via clean architecture. Engineered high-performance RESTful APIs deployed on GCP (Compute Engine, Cloud SQL), ensuring robust system reliability and seamless production operations."
+  },
+  {
     id: 1,
     title: "Research Intern",
     company: "Centre for e-Automation Technologies (CeAT), VIT Chennai",
@@ -110,6 +117,27 @@ export const skills = [
   { name: "Three.js", icon: SiThreedotjs, color: "#FFFFFF" },
   { name: "ML/PyTorch", icon: SiPytorch, color: "#EE4C2C" }
 ];
+
+export const featuredCert = {
+  name: "Professional Cloud Architect",
+  issuer: "Google Cloud",
+  type: "Certification",
+  badge: "/professional-cloud-architect-certification.png",
+  url: "https://www.credly.com/badges/5be24c81-d882-476b-bd82-0504a3ab46f3/public_url"
+};
+
+export const courseCerts = [
+  { name: "Introduction to Cybersecurity", issuer: "Cisco", color: "#049fd9" },
+  { name: "Introduction to Packet Tracer", issuer: "Cisco", color: "#049fd9" },
+  { name: "Load Balancing on Compute Engine", issuer: "Google Cloud", color: "#4285F4" },
+  { name: "C++ Intermediate", issuer: "Sololearn", color: "#41c473" },
+  { name: "HTML and CSS in Depth", issuer: "Coursera", color: "#0056d2" },
+  { name: "Programming with JavaScript", issuer: "Coursera", color: "#0056d2" },
+  { name: "React Basics", issuer: "Coursera", color: "#0056d2" },
+  { name: "SQL Course", issuer: "Coursera", color: "#0056d2" }
+];
+
+export const credlyProfile = "https://www.credly.com/users/puneet-chandna.ea5ad5b2";
 
 export const socialLinks = {
   github: "https://github.com/puneet-chandna",
