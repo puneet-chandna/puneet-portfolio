@@ -569,14 +569,75 @@ body {
   color: var(--primary);
 }
 
+.menu-toggle {
+  width: 44px;
+  height: 44px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--dim);
+  border-radius: 10px;
+  color: var(--primary);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.menu-toggle:hover {
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.menu-toggle svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.mobile-menu {
+  position: fixed;
+  top: 76px;
+  left: 5%;
+  right: 5%;
+  z-index: 99;
+  display: none;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  background: rgba(5, 5, 5, 0.96);
+  border: 1px solid var(--dim);
+  border-radius: 14px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+.mobile-menu a {
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.mobile-menu a:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--primary);
+}
+
 @media (max-width: 768px) {
   .nav-links {
     display: none;
   }
 
+  .menu-toggle,
+  .mobile-menu {
+    display: flex;
+  }
+
   .section {
     padding: 80px 5%;
   }
+
 }
 
 /* Certifications — Spotlight + Marquee */

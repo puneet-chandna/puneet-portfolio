@@ -1,9 +1,20 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { FaBars, FaTimes } from 'react-icons/fa'
+
+const navItems = [
+  { href: '#about', label: 'About' },
+  { href: '#experience', label: 'Experience' },
+  { href: '#projects', label: 'Projects' },
+  { href: '#skills', label: 'Skills' },
+  { href: '#certifications', label: 'Certifications' },
+  { href: '#contact', label: 'Contact' },
+]
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [showPhoto, setShowPhoto] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -12,6 +23,21 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [mobileMenuOpen])
+
+  const closeMobileMenu = () => setMobileMenuOpen(false)
 
   return (
     <>
@@ -48,14 +74,43 @@ export default function Navbar() {
         </a>
         
         <ul className="nav-links">
-          <li><a href="#about">About</a></li>
-          <li><a href="#experience">Experience</a></li>
-          <li><a href="#projects">Projects</a></li>
-          <li><a href="#skills">Skills</a></li>
-          <li><a href="#certifications">Certifications</a></li>
-          <li><a href="#contact">Contact</a></li>
+          {navItems.map((item) => (
+            <li key={item.href}>
+              <a href={item.href}>{item.label}</a>
+            </li>
+          ))}
         </ul>
+
+        <button
+          type="button"
+          className="menu-toggle"
+          aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-controls="mobile-menu"
+          aria-expanded={mobileMenuOpen}
+          onClick={() => setMobileMenuOpen((open) => !open)}
+        >
+          {mobileMenuOpen ? <FaTimes aria-hidden="true" /> : <FaBars aria-hidden="true" />}
+        </button>
       </motion.nav>
+
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            id="mobile-menu"
+            className="mobile-menu"
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.2 }}
+          >
+            {navItems.map((item) => (
+              <a key={item.href} href={item.href} onClick={closeMobileMenu}>
+                {item.label}
+              </a>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Photo Lightbox Modal */}
       <AnimatePresence>

@@ -36,7 +36,7 @@ export default function Contact() {
   }
 
   const copySSH = () => {
-    navigator.clipboard.writeText('ssh puneet.sh')
+    navigator.clipboard.writeText('ssh puneet.space')
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
