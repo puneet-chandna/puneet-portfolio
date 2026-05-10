@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { FaCheck } from 'react-icons/fa'
 
 const WEB3FORMS_KEY = import.meta.env.VITE_WEB3FORMS_KEY
 
@@ -97,8 +98,9 @@ export default function Contact() {
             </button>
             
             {status === 'success' && (
-              <p style={{ color: 'var(--success)', textAlign: 'center', marginTop: '1rem' }}>
-                ✓ Message sent successfully!
+              <p className="form-status success-status">
+                <FaCheck aria-hidden="true" />
+                Message sent successfully!
               </p>
             )}
             {status === 'error' && (

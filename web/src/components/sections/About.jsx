@@ -1,4 +1,20 @@
 import { motion } from 'framer-motion'
+import { createElement } from 'react'
+import {
+  FaChalkboardTeacher,
+  FaChartLine,
+  FaFlask,
+  FaGraduationCap,
+  FaTrophy,
+} from 'react-icons/fa'
+
+const quickFacts = [
+  { icon: FaGraduationCap, text: 'B.Tech CSE @ VIT Chennai (2026)' },
+  { icon: FaFlask, text: 'Research: VM Placement Optimization' },
+  { icon: FaChartLine, text: '50% community growth at DAO' },
+  { icon: FaChalkboardTeacher, text: 'Mentored 25+ blockchain devs' },
+  { icon: FaTrophy, text: '5 major hackathons organized' },
+]
 
 export default function About() {
   return (
@@ -37,12 +53,15 @@ export default function About() {
             transition={{ type: "spring", stiffness: 300 }}
           >
             <h3 style={{ color: 'var(--primary)', marginBottom: '1rem' }}>Quick Facts</h3>
-            <ul style={{ listStyle: 'none', lineHeight: 2 }}>
-              <li>🎓 B.Tech CSE @ VIT Chennai (2026)</li>
-              <li>🔬 Research: VM Placement Optimization</li>
-              <li>🚀 50% community growth at DAO</li>
-              <li>👨‍🏫 Mentored 25+ blockchain devs</li>
-              <li>🏆 5 major hackathons organized</li>
+            <ul className="quick-facts-list">
+              {quickFacts.map(({ icon, text }) => (
+                <li className="quick-fact" key={text}>
+                  <span className="quick-fact-icon" aria-hidden="true">
+                    {createElement(icon)}
+                  </span>
+                  <span>{text}</span>
+                </li>
+              ))}
             </ul>
           </motion.div>
         </div>
