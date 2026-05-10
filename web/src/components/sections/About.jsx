@@ -33,7 +33,7 @@ export default function About() {
               I am <span className="highlight">Puneet Chandna</span>, a software engineer and problem solver based in India, currently a final year student at <span className="highlight">VIT Chennai</span>. 
             </p>
             <p>
-              My professional experience includes roles as a Research Intern at <span className="highlight">CeAT VIT</span> and Full Stack Developer Intern at <span className="highlight">Daira EdTech</span>, where I honed my skills in solving real-world engineering challenges.
+              My professional experience includes a <span className="highlight">Backend Engineering Internship at Apoliums Infotech India Pvt. Ltd.</span>, where I worked on scalable backend services using <span className="highlight">Golang (Gin), MySQL, and Google Cloud Platform</span>. I’ve also worked as a Research Intern at <span className="highlight">CeAT VIT</span> and a Full Stack Developer Intern at <span className="highlight">Daira EdTech</span>, with experience across API design, database optimization, simulations, and production-focused systems.
             </p>
             <p>
               Beyond engineering, I have been actively involved in student tech communities. As the <span className="highlight">Blockchain Lead at HackClub VIT</span> and a core member of the <span className="highlight">DAO Community</span> (Outreach & Web Lead), I’ve organized hackathons, guided student teams, and helped foster a culture of hands-on learning.

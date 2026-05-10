@@ -12,9 +12,12 @@ import './styles/index.css'
 function App() {
   return (
     <>
+      <a className="skip-link" href="#main-content">
+        Skip to main content
+      </a>
       <Scene />
       <Navbar />
-      <main className="content">
+      <main className="content" id="main-content" tabIndex="-1">
         <Hero />
         <About />
         <Experience />

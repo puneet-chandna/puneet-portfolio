@@ -155,6 +155,7 @@ export default function Navbar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              aria-label="Close photo preview"
               onClick={() => setShowPhoto(false)}
               style={{
                 position: 'absolute',
@@ -173,7 +174,7 @@ export default function Navbar() {
                 fontSize: '24px'
               }}
             >
-              ×
+              <span aria-hidden="true">×</span>
             </motion.button>
           </motion.div>
         )}
