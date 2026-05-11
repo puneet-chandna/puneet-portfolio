@@ -7,6 +7,26 @@ import {
 
 export const projects = [
   {
+    id: 7,
+    name: "Real-Time Dealer Gamma Exposure (GEX) Analysis",
+    description: "Full-stack 0DTE SPX monitor computing strike-level dealer GEX, zero-gamma, Charm/Vanna flow signals, and Kalman-smoothed regimes from live option chains.",
+    stack: ["FastAPI", "Next.js", "PostgreSQL", "WebSocket"],
+    year: 2026,
+    status: "Live",
+    url: "https://github.com/puneet-chandna/0DTE-dealer-gamma",
+    image: "/projects/gex.webp"
+  },
+  {
+    id: 8,
+    name: "CloudSim-HO Research",
+    description: "Centre for e-Automation Technologies (CeAT) research simulator implementing Hippopotamus Optimization for VM placement with CloudSim Plus benchmarking and statistical analysis.",
+    stack: ["Java 21", "Maven", "CloudSim Plus", "ANOVA"],
+    year: 2025,
+    status: "Research",
+    url: "https://github.com/puneet-chandna/cloudsim-ho-research",
+    image: "/projects/cloudsim-ho.webp"
+  },
+  {
     id: 1,
     name: "ASCII Video Insanity",
     description: "High-performance CLI media player rendering videos as colorized ASCII art at 30+ FPS with real-time image processing.",

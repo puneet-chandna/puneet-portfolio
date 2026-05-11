@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import { readFile, stat } from 'node:fs/promises'
 import { test } from 'node:test'
 
 const readSource = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8')
@@ -46,4 +46,26 @@ test('icon-only controls expose accessible names', async () => {
   assert.match(hero, /aria-label="LinkedIn"/)
   assert.match(hero, /aria-label="Email"/)
   assert.match(contact, /aria-label=\{copied \? 'SSH command copied' : 'Copy SSH command'\}/)
+})
+
+test('portfolio data includes the GEX and CloudSim research projects', async () => {
+  const portfolio = await readSource('src/data/portfolio.js')
+
+  assert.match(portfolio, /Real-Time Dealer Gamma Exposure \(GEX\) Analysis/)
+  assert.match(portfolio, /0DTE-dealer-gamma/)
+  assert.match(portfolio, /\/projects\/gex\.webp/)
+  assert.match(portfolio, /CloudSim-HO Research/)
+  assert.match(portfolio, /Centre for e-Automation Technologies \(CeAT\)/)
+  assert.match(portfolio, /cloudsim-ho-research/)
+  assert.match(portfolio, /\/projects\/cloudsim-ho\.webp/)
+
+  await stat(new URL('../public/projects/gex.webp', import.meta.url))
+  await stat(new URL('../public/projects/cloudsim-ho.webp', import.meta.url))
+})
+
+test('project thumbnails render in square frames', async () => {
+  const styles = await readSource('src/styles/index.css')
+
+  assert.match(styles, /\.project-card \.project-image\s*\{[^}]*aspect-ratio:\s*1\s*\/\s*1/s)
+  assert.doesNotMatch(styles, /\.project-card \.project-image\s*\{[^}]*height:\s*200px/s)
 })
