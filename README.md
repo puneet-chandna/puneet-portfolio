@@ -88,7 +88,7 @@ This isn't just a portfolio. It's a **statement**. A monument to the fact that I
 │   ║            └─────────────┬───────────────────┘                    ║     │
 │   ║                          │                                        ║     │
 │   ║               ┌──────────▼──────────┐                             ║     │
-│   ║               │   WEB3FORMS API     │                             ║     │
+│   ║               │    CONTACT APIs     │                             ║     │
 │   ║               │   (Contact Form)    │                             ║     │
 │   ║               └─────────────────────┘                             ║     │
 │   ║                                                                   ║     │
@@ -96,6 +96,8 @@ This isn't just a portfolio. It's a **statement**. A monument to the fact that I
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+Contact routing: **Terminal → Resend** (optional), **Web → Web3Forms**.
 
 ---
 
@@ -135,7 +137,7 @@ This isn't just a portfolio. It's a **statement**. A monument to the fact that I
 | ------------------ | --------------------------------------------------------- |
 | `🚀 Boot Sequence` | Matrix-style initialization with spinner and progress bar |
 | `📊 3-Pane Layout` | Menu → Viewport → Inspector (vim-style navigation)        |
-| `📨 Contact Form`  | Live Web3Forms integration - messages hit my inbox        |
+| `📨 Contact Form`  | Optional Resend integration with delivery feedback        |
 | `🎨 Tron Theme`    | Cyan glow, electric blue, deep void black                 |
 | `⌨️ Vim Bindings`  | j/k navigation because we're not savages                  |
 
@@ -143,8 +145,8 @@ This isn't just a portfolio. It's a **statement**. A monument to the fact that I
 
 ```bash
 cd terminal
-source .env  # Load the sacred keys
-./portfolio
+[ -e .env ] || cp .env.example .env  # Preserve existing sacred keys
+docker compose up -d --build --wait
 
 # In another terminal dimension:
 ssh localhost -p 2222
@@ -229,7 +231,7 @@ puneet-portfolio/
 │   │   │   ├── update.go             # Event handlers
 │   │   │   ├── view.go               # Render logic
 │   │   │   ├── styles.go             # Tron aesthetics
-│   │   │   └── sender.go             # Web3Forms bridge
+│   │   │   └── sender.go             # Resend bridge
 │   │   └── data/
 │   │       ├── bio.go                # ASCII art bio
 │   │       └── projects.go           # Project data
@@ -296,22 +298,13 @@ puneet-portfolio/
 
 ## `> DEPLOYMENT PROTOCOLS`
 
-### Terminal Deployment (VPS)
+### Terminal Deployment (DigitalOcean + Docker)
 
-```bash
-# Build the artifact
-go build -o portfolio ./cmd/portfolio
+Follow the [DigitalOcean deployment guide](terminal/deploy/DIGITALOCEAN.md) to deploy through GitHub Actions and connect `ssh puneet.space`.
 
-# Transfer to your server
-scp portfolio user@your-server:/opt/portfolio/
+The workflow builds and tests the image, updates only the portfolio container, and rolls back an unhealthy release. Deployment stays disabled until `PORTFOLIO_DEPLOY_ENABLED=true` and the required GitHub secrets are configured.
 
-# Set up systemd service
-sudo cp deploy/portfolio.service /etc/systemd/system/
-sudo systemctl enable portfolio
-sudo systemctl start portfolio
-
-# Configure DNS: puneet.sh → your.server.ip
-```
+> ⚠️ Verify admin SSH on a separate port before assigning port **22** to the portfolio. The guide covers existing containers, persistent host keys, and DNS. The public endpoint still needs droplet/DNS setup.
 
 ### Web Deployment (Vercel)
 
@@ -330,8 +323,10 @@ vercel deploy --prod
 ## `> ENVIRONMENT CONFIGURATION`
 
 ```bash
-# terminal/.env
-WEB3FORMS_KEY=your-secret-key-here
+# terminal/.env — optional email delivery
+RESEND_API_KEY=your-secret-key-here
+RESEND_FROM="Puneet Portfolio <portfolio@your-verified-domain>"
+RESEND_TO=your-email@example.com
 
 # web/.env
 VITE_WEB3FORMS_KEY=your-secret-key-here

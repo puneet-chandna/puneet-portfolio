@@ -7,26 +7,29 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-var spinnerFrames = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
 var encryptChars = []string{"█", "▓", "▒", "░", "▪", "▫", "◆", "◇", "○", "●", "◐", "◑", "◒", "◓"}
 
+var spinnerFrames = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+
 func (m Model) View() string {
+	var content string
 	switch m.State {
 	case StateBoot:
-		return m.renderBoot()
+		content = m.renderBoot()
 	case StateLoading:
-		return m.renderLoading()
+		content = m.renderLoading()
 	case StateAccessGranted:
-		return m.renderAccessGranted()
+		content = m.renderAccessGranted()
 	case StateContactForm:
-		return m.renderContactForm()
+		content = m.renderContactForm()
 	case StateContactSending:
-		return m.renderContactSending()
+		content = m.renderContactSending()
 	case StateContactSent:
-		return m.renderContactSent()
+		content = m.renderContactSent()
 	default:
-		return m.renderMain()
+		content = m.renderMain()
 	}
+	return lipgloss.NewStyle().MaxWidth(m.Width).MaxHeight(m.Height).Render(content)
 }
 
 func (m Model) renderBoot() string {
@@ -101,11 +104,13 @@ func (m Model) renderAccessGranted() string {
 }
 
 func (m Model) renderContactForm() string {
+	compact := m.Width < 70 || m.Height < 24
 	inputStyle := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(ColorDim).
-		Padding(0, 1).
-		Width(50)
+		Padding(0, 1)
+	formWidth := m.contactFormWidth()
+	inputStyle = inputStyle.Width(max(0, formWidth-inputStyle.GetHorizontalBorderSize()))
 
 	focusedInputStyle := inputStyle.BorderForeground(ColorPrimary)
 
@@ -113,6 +118,10 @@ func (m Model) renderContactForm() string {
 
 	var inputs []string
 	for i, input := range m.ContactInputs {
+		if compact && i != m.ContactFocus {
+			continue
+		}
+		input.Width = m.contactInputWidth(input)
 		style := inputStyle
 		if i == m.ContactFocus {
 			style = focusedInputStyle
@@ -122,61 +131,36 @@ func (m Model) renderContactForm() string {
 	}
 
 	formContent := lipgloss.JoinVertical(lipgloss.Left, inputs...)
+	if compact {
+		formContent = m.Styles.Dim.Render(fmt.Sprintf("Field %d/%d", m.ContactFocus+1, len(m.ContactInputs))) + "\n" + formContent
+	}
 
-	content := lipgloss.JoinVertical(lipgloss.Center,
-		"",
-		m.Styles.Title.Render("╔═══ SECURE UPLINK ═══╗"),
-		"",
-		m.Styles.Subtitle.Render("Establish direct communication channel"),
-		"",
-		formContent,
-		"",
-		m.Styles.Dim.Render("[Tab] Next  [Enter] Transmit  [Esc] Abort"),
-		"",
-	)
+	parts := []string{m.Styles.Title.MarginBottom(0).Render("╔═══ SECURE UPLINK ═══╗")}
+	if !compact {
+		parts = append(parts, m.Styles.Subtitle.Render("Establish direct communication channel"))
+	}
+	parts = append(parts, formContent)
+	if m.ContactError != "" {
+		parts = append(parts, m.Styles.AccentText.Width(formWidth).Render(m.ContactError))
+	}
+	parts = append(parts, m.Styles.Dim.Width(max(1, m.Width-2)).Render("[Tab] Next  [Enter] Transmit  [Esc] Abort"))
+	content := lipgloss.JoinVertical(lipgloss.Center, parts...)
 
 	return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, content)
 }
 
 func (m Model) renderContactSending() string {
-	// Generate "encryption" animation
-	barWidth := 30
-	progress := (m.SendingFrame * barWidth) / 30
-
-	var encryptedBar string
-	for i := 0; i < barWidth; i++ {
-		if i < progress {
-			encryptedBar += m.Styles.Success.Render("█")
-		} else {
-			char := encryptChars[(m.SendingFrame+i)%len(encryptChars)]
-			encryptedBar += m.Styles.BootSpinner.Render(char)
-		}
+	var bar strings.Builder
+	// Keep the original animated glyphs, without inventing delivery progress.
+	for i := 0; i < min(30, max(1, m.Width-4)); i++ {
+		bar.WriteString(m.Styles.BootSpinner.Render(encryptChars[(m.SendingFrame+i)%len(encryptChars)]))
 	}
-
-	var statusText string
-	switch {
-	case m.SendingFrame < 8:
-		statusText = "Encrypting message..."
-	case m.SendingFrame < 16:
-		statusText = "Establishing secure tunnel..."
-	case m.SendingFrame < 24:
-		statusText = "Transmitting via Neural Link..."
-	default:
-		statusText = "Finalizing uplink..."
-	}
-
 	content := lipgloss.JoinVertical(lipgloss.Center,
-		"",
-		"",
-		m.Styles.Title.Render("▓▓▓ TRANSMISSION IN PROGRESS ▓▓▓"),
-		"",
-		"["+encryptedBar+"]",
-		"",
-		m.Styles.Dim.Render(statusText),
-		"",
-		"",
+		m.Styles.Title.MarginBottom(0).Width(max(1, m.Width-2)).Render("▓▓▓ TRANSMISSION IN PROGRESS ▓▓▓"),
+		"", "["+bar.String()+"]", "",
+		m.Styles.Dim.Width(max(1, m.Width-2)).Render("Waiting for the email provider..."),
+		m.Styles.Dim.Render("[Ctrl+C] Disconnect"),
 	)
-
 	return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, content)
 }
 
@@ -190,8 +174,7 @@ func (m Model) renderContactSent() string {
 		"",
 		m.Styles.Success.Render("████████████████████████████████"),
 		"",
-		m.Styles.Dim.Render("Message encrypted and delivered"),
-		m.Styles.Dim.Render("Operator will respond shortly"),
+		m.Styles.Dim.Render("Accepted for delivery by the email provider."),
 		"",
 		m.Styles.Subtitle.Render("Press any key to continue..."),
 		"",
@@ -204,33 +187,17 @@ func (m Model) renderMain() string {
 	header := m.GetHeader()
 	footer := m.GetFooter()
 
-	contentHeight := m.Height - 4
-
-	// Calculate pane widths - responsive design
-	menuWidth := 22
-	if m.Width < 60 {
-		menuWidth = 16
-	}
-
-	inspectorWidth := 0
-	if m.Width > 100 {
-		inspectorWidth = 26
-	}
-	viewportWidth := m.Width - menuWidth - inspectorWidth - 6
-
-	if viewportWidth < 20 {
-		viewportWidth = 20
-	}
-
-	menu := m.renderMenu(menuWidth, contentHeight)
+	menuWidth, inspectorWidth, viewportWidth, contentHeight := m.paneLayout()
 	viewport := m.renderViewport(viewportWidth, contentHeight)
 
-	var panes string
+	panes := viewport
+	if menuWidth > 0 {
+		menu := m.renderMenu(menuWidth, contentHeight)
+		panes = lipgloss.JoinHorizontal(lipgloss.Top, menu, viewport)
+	}
 	if inspectorWidth > 0 {
 		inspector := m.renderInspector(inspectorWidth, contentHeight)
-		panes = lipgloss.JoinHorizontal(lipgloss.Top, menu, viewport, inspector)
-	} else {
-		panes = lipgloss.JoinHorizontal(lipgloss.Top, menu, viewport)
+		panes = lipgloss.JoinHorizontal(lipgloss.Top, panes, inspector)
 	}
 
 	// Show help overlay if enabled
@@ -238,18 +205,82 @@ func (m Model) renderMain() string {
 		return m.renderHelpOverlay()
 	}
 
-	return lipgloss.JoinVertical(lipgloss.Left, header, panes, footer)
+	return lipgloss.NewStyle().MaxWidth(m.Width).MaxHeight(m.Height).Render(lipgloss.JoinVertical(lipgloss.Left, header, panes, footer))
+}
+
+func (m Model) paneLayout() (menuWidth, inspectorWidth, viewportWidth, contentHeight int) {
+	menuWidth = 22
+	if m.Width < 60 {
+		menuWidth = 16
+	}
+	if m.Width < 38 {
+		menuWidth = 0
+	}
+	contentHeight = m.Height - lipgloss.Height(m.GetHeader()) - lipgloss.Height(m.GetFooter())
+	if contentHeight < 1 {
+		contentHeight = 1
+	}
+	if m.Width > 100 && contentHeight >= 28 {
+		inspectorWidth = 26
+	}
+	viewportWidth = m.Width - menuWidth - inspectorWidth
+	if viewportWidth < 1 {
+		viewportWidth = 1
+	}
+	return
+}
+
+func (m *Model) refreshViewport(reset bool) {
+	_, _, width, height := m.paneLayout()
+	frameWidth := m.Styles.Viewport.GetHorizontalFrameSize()
+	frameHeight := m.Styles.Viewport.GetVerticalFrameSize()
+	m.Viewport.Width = max(1, width-frameWidth)
+	m.Viewport.Height = max(1, height-frameHeight)
+	m.Viewport.SetContent(lipgloss.NewStyle().Width(m.Viewport.Width).Render(m.viewportContent()))
+	m.viewportTab = m.ActiveTab()
+	if reset {
+		m.Viewport.GotoTop()
+	}
+}
+
+func (m Model) viewportContent() string {
+	switch m.ActiveTab() {
+	case "about":
+		return m.renderColorizedBio()
+	case "experience":
+		return m.renderExperience()
+	case "projects":
+		return m.renderProjectList()
+	case "contact":
+		return m.renderContactInfo()
+	case "exit":
+		return "Press Enter to disconnect from PUNEET-OS\n\nThank you for visiting."
+	}
+	return ""
 }
 
 func (m Model) renderHelpOverlay() string {
+	if m.Width < 60 || m.Height < 28 {
+		help := lipgloss.JoinVertical(lipgloss.Left,
+			m.Styles.Title.MarginBottom(0).Render("HELP"),
+			m.Styles.Dim.Render("↑↓/jk navigate or select"),
+			m.Styles.Dim.Render("h/l change section"),
+			m.Styles.Dim.Render("PgUp/PgDn scroll"),
+			m.Styles.Dim.Render("Enter select/send"),
+			m.Styles.Dim.Render("? Close  q Exit"),
+		)
+		box := lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(ColorPrimary).Padding(0, 1).Background(ColorBg)
+		return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, box.Render(help))
+	}
 	helpContent := lipgloss.JoinVertical(lipgloss.Left,
 		m.Styles.Title.Render("╔═══ KEYBOARD SHORTCUTS ═══╗"),
 		"",
 		m.Styles.MenuActive.Render("Navigation"),
-		m.Styles.Dim.Render("  ↑/k     Move up"),
-		m.Styles.Dim.Render("  ↓/j     Move down"),
-		m.Styles.Dim.Render("  ←/h     Previous project"),
-		m.Styles.Dim.Render("  →/l     Next project"),
+		m.Styles.Dim.Render("  ↑/k     Menu or project"),
+		m.Styles.Dim.Render("  ↓/j     Menu or project"),
+		m.Styles.Dim.Render("  ←/h     Previous section"),
+		m.Styles.Dim.Render("  →/l     Next section"),
+		m.Styles.Dim.Render("  PgUp/PgDn Scroll page"),
 		m.Styles.Dim.Render("  Enter   Select/Confirm"),
 		"",
 		m.Styles.MenuActive.Render("General"),
@@ -290,114 +321,78 @@ func (m Model) renderMenu(width, height int) string {
 
 	menu := lipgloss.JoinVertical(lipgloss.Left, menuItems...)
 
-	// Add system stats at bottom
-	stats := m.Styles.Dim.Render("\n\n━━━━━━━━━━━━━━━━\nSYS STATS:\nCPU: 12%\nMEM: 64MB\nUPTIME: 24d")
-	menu = lipgloss.JoinVertical(lipgloss.Left, menu, stats)
-
-	return m.Styles.Menu.Width(width).Height(height).Render(menu)
+	return m.Styles.Menu.Width(max(0, width-m.Styles.Menu.GetHorizontalBorderSize())).Height(max(0, height-m.Styles.Menu.GetVerticalBorderSize())).Render(menu)
 }
 
 func (m Model) renderViewport(width, height int) string {
-	var content string
-
-	switch m.ActiveTab() {
-	case "about":
-		content = m.renderColorizedBio()
-	case "experience":
-		content = m.renderExperience()
-	case "projects":
-		content = m.renderProjectList()
-	case "contact":
-		content = m.renderContactInfo()
-	case "exit":
-		content = "\n\nPress Enter to disconnect from PUNEET-OS\n\n" +
-			m.Styles.Dim.Render("Thank you for visiting.")
+	viewport := m.Viewport
+	if m.viewportTab != m.ActiveTab() {
+		viewport.SetContent(lipgloss.NewStyle().Width(viewport.Width).Render(m.viewportContent()))
+		viewport.GotoTop()
 	}
-
-	// Wrap content to fit viewport width
-	contentWidth := width - 6
-	if contentWidth < 20 {
-		contentWidth = 20
-	}
-	wrapped := lipgloss.NewStyle().Width(contentWidth).Render(content)
-
-	// Add navigation hint
-	navHint := m.Styles.Dim.Render("\n[ ↑↓ Navigate Menu ]")
-
-	return m.Styles.Viewport.Width(width).Height(height).Render(wrapped + navHint)
+	return m.Styles.Viewport.Width(max(0, width-m.Styles.Viewport.GetHorizontalBorderSize())).Height(max(0, height-m.Styles.Viewport.GetVerticalBorderSize())).Render(viewport.View())
 }
 
 // renderExperience renders the experience/work history section
 func (m Model) renderExperience() string {
-	var lines []string
-
-	lines = append(lines, m.Styles.Title.Render("MISSION LOG"))
-	lines = append(lines, "")
-
-	// Experience entries
-	lines = append(lines, m.Styles.MenuActive.Render("Research Intern")+" @ CeAT, VIT")
-	lines = append(lines, m.Styles.Dim.Render("  May-Jul 2025"))
-	lines = append(lines, "  CloudSim Plus framework for")
-	lines = append(lines, "  VM placement optimization")
-	lines = append(lines, "")
-
-	lines = append(lines, m.Styles.MenuActive.Render("Full Stack Developer")+" @ Daira")
-	lines = append(lines, m.Styles.Dim.Render("  Dec 2024 - Feb 2025"))
-	lines = append(lines, "  Backend APIs, "+m.Styles.Success.Render("30%")+" faster")
-	lines = append(lines, "  data retrieval")
-	lines = append(lines, "")
-
-	lines = append(lines, m.Styles.MenuActive.Render("Web Dev Intern")+" @ IIT Bombay")
-	lines = append(lines, m.Styles.Dim.Render("  Sept-Oct 2024"))
-	lines = append(lines, "  Reduced payload by "+m.Styles.Success.Render("90%"))
-	lines = append(lines, "  Optimized DB queries")
-
+	lines := strings.Split(m.Experience, "\n")
+	for i, line := range lines {
+		switch {
+		case strings.TrimSpace(line) == "MISSION LOG:":
+			lines[i] = m.Styles.Title.Render("MISSION LOG")
+		case strings.HasPrefix(line, "• "):
+			parts := strings.SplitN(line, " @ ", 2)
+			lines[i] = m.Styles.MenuActive.Render(parts[0])
+			if len(parts) == 2 {
+				lines[i] += " @ " + parts[1]
+			}
+		case strings.Contains(line, "202"):
+			lines[i] = m.Styles.Dim.Render(line)
+		default:
+			lines[i] = strings.NewReplacer("30%", m.Styles.Success.Render("30%"), "90%", m.Styles.Success.Render("90%")).Replace(line)
+		}
+	}
 	return strings.Join(lines, "\n")
 }
 
 // renderColorizedBio returns the bio with Tron-style coloring applied
 func (m Model) renderColorizedBio() string {
-	var lines []string
-
-	// Operator header
-	lines = append(lines, m.Styles.Title.Render("╔══════════════════════════════╗"))
-	lines = append(lines, m.Styles.Title.Render("║  OPERATOR: PUNEET CHANDNA    ║"))
-	lines = append(lines, m.Styles.Title.Render("╚══════════════════════════════╝"))
-	lines = append(lines, "")
-
-	// Status line with colors
-	lines = append(lines, "> STATUS: "+m.Styles.Success.Render("ONLINE"))
-	lines = append(lines, "> ROLE: "+m.Styles.MenuActive.Render("SOFTWARE ENGINEER")+" | "+m.Styles.MenuActive.Render("FULL STACK DEV"))
-	lines = append(lines, "> LOCATION: "+m.Styles.Dim.Render("VIT CHENNAI, INDIA"))
-	lines = append(lines, "> GRADUATION: "+m.Styles.AccentText.Render("2026"))
-	lines = append(lines, "")
-
-	// Tech Arsenal - responsive grid
-	lines = append(lines, m.Styles.Title.Render("TECH ARSENAL:"))
-	lines = append(lines, "  "+m.Styles.MenuActive.Render("Python")+"  "+m.Styles.MenuActive.Render("JavaScript")+"  "+m.Styles.MenuActive.Render("Go"))
-	lines = append(lines, "  "+m.Styles.Dim.Render("C++")+"     "+m.Styles.Dim.Render("Node.js")+"     "+m.Styles.Dim.Render("React"))
-	lines = append(lines, "  "+m.Styles.Dim.Render("Next.js")+" "+m.Styles.Dim.Render("MongoDB")+"     "+m.Styles.Dim.Render("PostgreSQL"))
-	lines = append(lines, "  "+m.Styles.AccentText.Render("AWS/GCP")+" "+m.Styles.AccentText.Render("Docker")+"      "+m.Styles.AccentText.Render("Linux/Git"))
-	lines = append(lines, "")
-
-	// Core Competencies
-	lines = append(lines, m.Styles.Title.Render("CORE COMPETENCIES:"))
-	lines = append(lines, "  • "+m.Styles.Success.Render("Full Stack Dev")+" & APIs")
-	lines = append(lines, "  • Data Structures & Algo")
-	lines = append(lines, "  • System Design")
-	lines = append(lines, "  • "+m.Styles.AccentText.Render("Cryptography")+" (AES)")
-	lines = append(lines, "  • Cloud Computing")
-	lines = append(lines, "")
-
-	lines = append(lines, m.Styles.Subtitle.Render("> \"Building performant &"))
-	lines = append(lines, m.Styles.Subtitle.Render("   elegant software.\""))
-
-	return strings.Join(lines, "\n")
+	title := m.Styles.Title.MarginBottom(0)
+	header := title.Render("╔══════════════════════════════╗\n║  OPERATOR: PUNEET CHANDNA    ║\n╚══════════════════════════════╝")
+	if m.Viewport.Width < 32 {
+		header = title.Render("OPERATOR: PUNEET CHANDNA")
+	}
+	lines := strings.Split(m.Bio, "\n")
+	for i, line := range lines {
+		switch {
+		case strings.HasPrefix(line, "> STATUS:"):
+			lines[i] = strings.ReplaceAll(line, "ONLINE", m.Styles.Success.Render("ONLINE"))
+		case strings.HasPrefix(line, "> ROLE:") || strings.HasPrefix(line, "  Python"):
+			lines[i] = m.Styles.MenuActive.Render(line)
+		case strings.HasPrefix(line, "> LOCATION:"):
+			lines[i] = m.Styles.Dim.Render(line)
+		case strings.Contains(line, "GRADUATION:") || strings.Contains(line, "AWS/GCP") || strings.Contains(line, "Cryptography"):
+			lines[i] = m.Styles.AccentText.Render(line)
+		case strings.HasSuffix(strings.TrimSpace(line), ":"):
+			lines[i] = m.Styles.Title.Render(line)
+		case strings.Contains(line, "\""):
+			lines[i] = m.Styles.Subtitle.Render(line)
+		}
+	}
+	return header + "\n\n" + strings.Join(lines, "\n")
 }
 
 func (m Model) renderProjectList() string {
 	var lines []string
 	lines = append(lines, m.Styles.Title.Render("╔═══ PROJECT DATABASE ═══╗"))
+	if len(m.Projects) > 0 && m.ProjectIndex >= 0 && m.ProjectIndex < len(m.Projects) {
+		p := m.Projects[m.ProjectIndex]
+		lines = append(lines, m.Styles.MenuActive.Render("SELECTED: "+p.Name), p.Description)
+		lines = append(lines, "Stack: "+strings.Join(p.Stack, ", "))
+		if p.URL != "" {
+			lines = append(lines, "URL:", p.URL)
+		}
+	}
 	lines = append(lines, "")
 
 	for i, p := range m.Projects {
@@ -417,18 +412,22 @@ func (m Model) renderProjectList() string {
 			nameStyle = m.Styles.MenuActive
 		}
 
-		lines = append(lines, numStyle.Render(fmt.Sprintf("%d. ", i+1))+nameStyle.Render(p.Name))
-		lines = append(lines, "   "+m.Styles.Dim.Render(p.Description))
-		lines = append(lines, "   Status: "+statusStyle.Render(status))
-		lines = append(lines, "")
+		lines = append(lines, numStyle.Render(fmt.Sprintf("%d. ", i+1))+nameStyle.Render(p.Name)+" "+statusStyle.Render(status))
 	}
 
-	lines = append(lines, m.Styles.Dim.Render("[↑↓] Select project  [←→] Navigate"))
+	lines = append(lines, "", m.Styles.Dim.Render("[↑↓/jk] Select project  [PgUp/PgDn] Scroll"))
 
 	return strings.Join(lines, "\n")
 }
 
 func (m Model) renderContactInfo() string {
+	status := "Press [Enter] to open the message form"
+	if !ContactFormConfigured() {
+		status = "Message form is disabled until email delivery is configured. Use these links instead."
+	}
+	if m.ContactError != "" {
+		status = m.ContactError
+	}
 	return m.Styles.Title.Render("╔═══ UPLINK TERMINAL ═══╗") + `
 
 Establish communication via secure channels:
@@ -445,11 +444,9 @@ Establish communication via secure channels:
 ` + m.Styles.MenuActive.Render("WEBSITE") + `
   puneetchandna.com
 
-` + m.Styles.Dim.Render(`
-━━━━━━━━━━━━━━━━━━━━━━━━━━━
-> Encrypted channel ready`) + `
+` + m.Styles.Dim.Render("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━\n> "+status) + `
 
-` + m.Styles.AccentText.Render("Press [Enter] to open secure uplink form")
+` + m.Styles.AccentText.Render("Resume: https://puneetchandna.com/Puneet-Chandna-Resume.pdf")
 }
 
 func (m Model) renderInspector(width, height int) string {
@@ -463,7 +460,7 @@ func (m Model) renderInspector(width, height int) string {
 			"Status: " + m.Styles.Success.Render("Active")
 
 	case "projects":
-		if len(m.Projects) > 0 && m.ProjectIndex < len(m.Projects) {
+		if len(m.Projects) > 0 && m.ProjectIndex >= 0 && m.ProjectIndex < len(m.Projects) {
 			p := m.Projects[m.ProjectIndex]
 			content = m.Styles.Title.Render("DETAILS") + "\n\n" +
 				"Stack:\n"
@@ -478,13 +475,12 @@ func (m Model) renderInspector(width, height int) string {
 
 	case "contact":
 		content = m.Styles.Title.Render("UPLINK STATUS") + "\n\n" +
-			m.Styles.Success.Render("● Channel Open") + "\n\n" +
-			m.Styles.Dim.Render("Latency: 42ms\nEncryption: AES-256")
+			m.Styles.Dim.Render("Use Enter to open the message form when configured.")
 
 	case "exit":
 		content = m.Styles.AccentText.Render("DISCONNECT?") + "\n\n" +
 			m.Styles.Dim.Render("Press Enter\nto confirm")
 	}
 
-	return m.Styles.Inspector.Width(width).Height(height).Render(content)
+	return m.Styles.Inspector.Width(max(0, width-m.Styles.Inspector.GetHorizontalBorderSize())).Height(max(0, height-m.Styles.Inspector.GetVerticalBorderSize())).Render(content)
 }

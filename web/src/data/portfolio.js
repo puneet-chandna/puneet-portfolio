@@ -90,6 +90,13 @@ export const projects = [
 
 export const experience = [
   {
+    id: 4,
+    title: "Product Developer",
+    company: "Hyr.works (Zofa AI Solutions Pvt. Ltd.)",
+    date: "Mar 2026 – Present",
+    description: "Developed and stabilized Hyr’s V2 recruiter platform in Next.js, resolving recurring client-reported bugs across frontend and backend workflows. Built the Hyr Live Chrome extension and integrated Hyr Agent APIs. Hardened tenant isolation across Next.js and Java services using Supabase row-level security, JWT authentication, and role-based access controls, with integration testing for authentication and workflow regressions. Rebuilt the FFmpeg recording pipeline with dual recorders, 2-minute chunks, browser buffering, and verified uploads to preserve partial interviews during network failures. Implemented Grafana/Sentry monitoring and Telegram alerts across DigitalOcean production services. Independently researched, designed, and built hyr.works in Next.js, exploring 16+ design prototypes and implementing responsive pages, technical SEO, and generative engine optimization (GEO)."
+  },
+  {
     id: 0,
     title: "Backend Engineering Intern",
     company: "Apoliums Infotech India Pvt. Ltd.",

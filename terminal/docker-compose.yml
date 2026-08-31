@@ -1,33 +1,33 @@
+name: puneet-terminal
+
 services:
   portfolio:
+    image: ${PORTFOLIO_IMAGE:-puneet-terminal:local}
     build: .
-    container_name: terminal-portfolio
     restart: unless-stopped
-    env_file: .env
+    ports:
+      - "${PORTFOLIO_BIND_IP:-127.0.0.1}:${PORTFOLIO_PORT:-2222}:2222"
+    environment:
+      SSH_PORT: "2222"
+      SSH_HOST_KEY_PATH: /app/.ssh/id_ed25519
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM: ${RESEND_FROM:-}
+      RESEND_TO: ${RESEND_TO:-}
+      GOMEMLIMIT: 192MiB
     volumes:
-      - ./.ssh:/app/.ssh:ro # SSH host keys (read-only)
-    networks:
-      - tunnel-net
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "22"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
+      - hostkeys:/app/.ssh
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 0.50
+    pids_limit: 64
+    stop_grace_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
 
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    container_name: cloudflared-tunnel
-    restart: unless-stopped
-    command: tunnel --config /etc/cloudflared/config.yml run
-    volumes:
-      - ${HOME}/.cloudflared:/etc/cloudflared:ro # Tunnel config + credentials
-    networks:
-      - tunnel-net
-    depends_on:
-      portfolio:
-        condition: service_healthy
-
-networks:
-  tunnel-net:
-    driver: bridge
+volumes:
+  hostkeys:

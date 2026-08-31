@@ -12,6 +12,22 @@ type Project struct {
 func GetProjects() []Project {
 	return []Project{
 		{
+			Name:        "Real-Time Dealer Gamma Exposure (GEX) Analysis",
+			Description: "Full-stack 0DTE SPX monitor for strike-level dealer GEX, zero-gamma, Charm/Vanna flow signals, and Kalman-smoothed regimes.",
+			Stack:       []string{"FastAPI", "Next.js", "PostgreSQL", "WebSocket"},
+			Year:        2026,
+			Status:      "Live",
+			URL:         "https://github.com/puneet-chandna/0DTE-dealer-gamma",
+		},
+		{
+			Name:        "CloudSim-HO Research",
+			Description: "CeAT research simulator for Hippopotamus Optimization VM placement with CloudSim Plus benchmarking and statistical analysis.",
+			Stack:       []string{"Java 21", "Maven", "CloudSim Plus", "ANOVA"},
+			Year:        2025,
+			Status:      "Research",
+			URL:         "https://github.com/puneet-chandna/cloudsim-ho-research",
+		},
+		{
 			Name:        "ASCII Video Insanity",
 			Description: "High-performance CLI media player rendering videos as colorized ASCII art at 30+ FPS with real-time image processing.",
 			Stack:       []string{"Python", "OpenCV", "PIL", "ANSI"},
@@ -50,6 +66,14 @@ func GetProjects() []Project {
 			Year:        2024,
 			Status:      "Live",
 			URL:         "water-brakes.streamlit.app/",
+		},
+		{
+			Name:        "BookMyEvent",
+			Description: "Event management app with real-time ESP32 QR code scanning and ticket authentication.",
+			Stack:       []string{"Node.js", "Express", "Flutter", "MongoDB"},
+			Year:        2024,
+			Status:      "Live",
+			URL:         "https://github.com/puneet-chandna/bookmyshow_server",
 		},
 		{
 			Name:        "Terminal Portfolio",

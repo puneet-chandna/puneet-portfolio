@@ -1,18 +1,7 @@
-# Secrets — never bake into the image
-.env
-.ssh/
-*.pem
-terminal.pem
-
-# Git / CI
-.git/
-.github/
-
-# Deploy scripts (not needed in image)
-deploy/
-
-# IDE / OS
-.vscode/
-.idea/
-*.swp
-*~
+**
+!go.mod
+!go.sum
+!cmd/
+!cmd/**
+!internal/
+!internal/**

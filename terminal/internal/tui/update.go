@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"context"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -12,34 +13,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.handleKey(msg)
 
 	case tea.WindowSizeMsg:
-		m.Width = msg.Width
-		m.Height = msg.Height
+		m.Width = clamp(msg.Width, 1, 500)
+		m.Height = clamp(msg.Height, 1, 200)
+		m.resizeContactInputs()
+		m.refreshViewport(true)
+		return m, nil
 
-		// Calculate viewport dimensions based on new window size
-		headerHeight := 2
-		footerHeight := 2
-		menuWidth := 22
-		if m.Width < 60 {
-			menuWidth = 16
+	case sendingTickMsg:
+		if m.State == StateContactSending {
+			m.SendingFrame = (m.SendingFrame + 1) % len(encryptChars)
+			return m, sendingTickCmd()
 		}
-		inspectorWidth := 0
-		if m.Width > 100 {
-			inspectorWidth = 26
-		}
-
-		viewportWidth := m.Width - menuWidth - inspectorWidth - 8
-		if viewportWidth < 20 {
-			viewportWidth = 20
-		}
-		viewportHeight := m.Height - headerHeight - footerHeight - 4
-		if viewportHeight < 5 {
-			viewportHeight = 5
-		}
-
-		m.Viewport.Width = viewportWidth
-		m.Viewport.Height = viewportHeight
-		m.ViewportReady = true
-
 		return m, nil
 
 	case tickMsg:
@@ -49,8 +33,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.State = StateMain
 		return m, nil
 
-	case sendDoneMsg:
-		m.State = StateContactSent
+	case sendResultMsg:
+		if msg.err != nil {
+			m.State = StateContactForm
+			m.ContactError = msg.err.Error()
+			m.focusContact(0)
+		} else {
+			m.ContactError = ""
+			m.State = StateContactSent
+		}
 		return m, nil
 	}
 
@@ -85,8 +76,11 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	// Contact sending animation - ignore keys
+	// Allow an immediate exit while delivery observes the session context.
 	if m.State == StateContactSending {
+		if msg.String() == "ctrl+c" {
+			return m, tea.Quit
+		}
 		return m, nil
 	}
 
@@ -117,15 +111,19 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "up", "k":
 		if m.ActiveTab() == "projects" && m.ProjectIndex > 0 {
 			m.ProjectIndex--
+			m.refreshViewport(true)
 		} else if m.MenuIndex > 0 {
 			m.MenuIndex--
+			m.refreshViewport(true)
 		}
 
 	case "down", "j":
 		if m.ActiveTab() == "projects" && m.ProjectIndex < len(m.Projects)-1 {
 			m.ProjectIndex++
+			m.refreshViewport(true)
 		} else if m.MenuIndex < 4 {
 			m.MenuIndex++
+			m.refreshViewport(true)
 		}
 
 	case "enter":
@@ -133,20 +131,33 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 		if m.ActiveTab() == "contact" {
+			if !ContactFormConfigured() {
+				m.ContactError = "Message delivery is not configured. Use the contact links above."
+				m.refreshViewport(false)
+				return m, nil
+			}
 			m.State = StateContactForm
-			m.ContactInputs[0].Focus()
+			m.ContactError = ""
+			m.focusContact(0)
 			return m, nil
 		}
 
 	case "left", "h":
 		if m.MenuIndex > 0 {
 			m.MenuIndex--
+			m.refreshViewport(true)
 		}
 
 	case "right", "l":
 		if m.MenuIndex < 4 {
 			m.MenuIndex++
+			m.refreshViewport(true)
 		}
+
+	case "pgup", "pgdown", "home", "end", "ctrl+u", "ctrl+d":
+		var cmd tea.Cmd
+		m.Viewport, cmd = m.Viewport.Update(msg)
+		return m, cmd
 	}
 
 	return m, nil
@@ -178,24 +189,41 @@ func (m Model) handleContactFormKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case "enter":
-		// Submit if we have content
-		if m.ContactInputs[0].Value() != "" && m.ContactInputs[1].Value() != "" {
-			m.State = StateContactSending
-			m.SendingFrame = 0
-			// Store values for sending
-			name := m.ContactInputs[0].Value()
-			email := m.ContactInputs[1].Value()
-			message := m.ContactInputs[2].Value()
-			// Send form in background
-			go SendContactForm(name, email, message)
-			return m, tickCmd()
+		if _, _, _, err := validateContact(m.ContactInputs[0].Value(), m.ContactInputs[1].Value(), m.ContactInputs[2].Value()); err != nil {
+			m.ContactError = err.Error()
+			return m, nil
 		}
+		if !ContactFormConfigured() {
+			m.ContactError = "Message delivery is not configured. Use the contact links above."
+			return m, nil
+		}
+		m.State = StateContactSending
+		m.SendingFrame = 0
+		return m, tea.Batch(m.sendContactCmd(), sendingTickCmd())
 	}
 
 	// Pass other keys to the focused input
 	var cmd tea.Cmd
 	m.ContactInputs[m.ContactFocus], cmd = m.ContactInputs[m.ContactFocus].Update(msg)
+	m.ContactError = ""
 	return m, cmd
+}
+
+func (m *Model) focusContact(index int) {
+	for i := range m.ContactInputs {
+		m.ContactInputs[i].Blur()
+	}
+	m.ContactFocus = index
+	m.ContactInputs[index].Focus()
+}
+
+func (m Model) sendContactCmd() tea.Cmd {
+	ctx := m.Context
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	name, email, message := m.ContactInputs[0].Value(), m.ContactInputs[1].Value(), m.ContactInputs[2].Value()
+	return func() tea.Msg { return sendResultMsg{err: SendContactForm(ctx, name, email, message)} }
 }
 
 func (m Model) handleTick() (tea.Model, tea.Cmd) {
@@ -226,21 +254,23 @@ func (m Model) handleTick() (tea.Model, tea.Cmd) {
 		}
 		return m, tickCmd()
 
-	case StateContactSending:
-		m.SendingFrame++
-		if m.SendingFrame > 30 {
-			return m, func() tea.Msg {
-				time.Sleep(500 * time.Millisecond)
-				return sendDoneMsg{}
-			}
-		}
-		return m, tickCmd()
-
 	case StateMain:
-		// Animate nav hint pulse
-		m.NavHintFrame++
 		return m, tickCmd()
 	}
 
 	return m, nil
+}
+
+func clamp(value, min, max int) int {
+	if value < min {
+		return min
+	}
+	if value > max {
+		return max
+	}
+	return value
+}
+
+func sendingTickCmd() tea.Cmd {
+	return tea.Tick(80*time.Millisecond, func(t time.Time) tea.Msg { return sendingTickMsg(t) })
 }

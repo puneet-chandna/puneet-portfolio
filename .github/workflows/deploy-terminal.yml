@@ -1,146 +1,96 @@
-name: Deploy Terminal Portfolio
+name: Terminal Portfolio CI and Droplet Deployment
 
 on:
+  pull_request:
+    branches: [main]
+    paths: ["terminal/**", ".github/workflows/deploy-terminal.yml"]
   push:
     branches: [main]
-    paths:
-      - "terminal/**"
-      - ".github/workflows/deploy-terminal.yml"
+    paths: ["terminal/**", ".github/workflows/deploy-terminal.yml"]
   workflow_dispatch:
 
-# Prevent parallel deployments
-concurrency:
-  group: deploy-terminal-${{ github.ref }}
-  cancel-in-progress: false
-
-# Minimal permissions (principle of least privilege)
 permissions:
   contents: read
   actions: read
 
+concurrency:
+  group: terminal-portfolio-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
-  GO_VERSION: "1.24"
-  BINARY_NAME: portfolio
+  GO_VERSION: "1.26.7"
+  RELEASE_ID: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
 
 jobs:
   build:
-    name: Build & Security Scan
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: terminal/go.sum
-
-      - name: Verify dependencies
+      - name: Verify, test, and scan
         working-directory: terminal
         run: |
+          bash -n deploy/update.sh
+          python3 deploy/update_test.py
           go mod verify
           go mod tidy -diff
-
-      - name: Run security scan (govulncheck)
-        working-directory: terminal
-        run: |
-          go install golang.org/x/vuln/cmd/govulncheck@latest
+          go vet ./...
+          go test -race ./...
+          go install golang.org/x/vuln/cmd/govulncheck@v1.7.0
           govulncheck ./...
-
-      - name: Run tests
+      - name: Build and smoke-test container
         working-directory: terminal
         run: |
-          go test -race -coverprofile=coverage.out ./... || echo "No tests found, skipping"
-
-      - name: Build for Linux amd64
-        working-directory: terminal
+          docker build --platform linux/amd64 -t "puneet-terminal:$RELEASE_ID" .
+          PORTFOLIO_IMAGE="puneet-terminal:$RELEASE_ID" PORTFOLIO_BIND_IP=127.0.0.1 PORTFOLIO_PORT=0 \
+            docker compose --project-name portfolio-ci up -d --no-build --pull never --wait --wait-timeout 60 portfolio
+      - name: Package tested image and deployment files
         run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o ${{ env.BINARY_NAME }} ./cmd/portfolio
-
-      - name: Verify binary
-        working-directory: terminal
-        run: |
-          file ${{ env.BINARY_NAME }}
-          ls -lh ${{ env.BINARY_NAME }}
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+          mkdir release
+          docker image save "puneet-terminal:$RELEASE_ID" | gzip > release/portfolio-image.tar.gz
+          cp terminal/docker-compose.yml terminal/deploy/update.sh release/
+      - uses: actions/upload-artifact@v4
         with:
-          name: portfolio-binary
-          path: terminal/${{ env.BINARY_NAME }}
-          retention-days: 1
+          name: terminal-release
+          path: release/
+          retention-days: 3
 
   deploy:
-    name: Deploy to AWS EC2
     needs: build
+    if: github.ref == 'refs/heads/main' && vars.PORTFOLIO_DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: production
+    env:
+      DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+      DROPLET_USER: ${{ secrets.DROPLET_USER }}
+      DROPLET_SSH_PORT: ${{ vars.DROPLET_SSH_PORT || '2222' }}
+      DROPLET_SSH_PRIVATE_KEY: ${{ secrets.DROPLET_SSH_PRIVATE_KEY }}
+      DROPLET_KNOWN_HOSTS: ${{ secrets.DROPLET_KNOWN_HOSTS }}
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: portfolio-binary
-
-      - name: Setup SSH Key
+          name: terminal-release
+          path: release
+      - name: Deploy only the portfolio service
+        shell: bash
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p 2222 -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
-
-      - name: Deploy to EC2
-        env:
-          EC2_USER: ${{ secrets.EC2_USER }}
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-        run: |
-          set -e
-
-          echo "::group::Stopping service"
-          ssh -p 2222 -o StrictHostKeyChecking=no -o ConnectTimeout=30 $EC2_USER@$EC2_HOST "sudo systemctl stop portfolio || true"
-          echo "::endgroup::"
-
-          echo "::group::Uploading binary"
-          scp -P 2222 -o StrictHostKeyChecking=no -o ConnectTimeout=30 ${{ env.BINARY_NAME }} $EC2_USER@$EC2_HOST:/tmp/
-          echo "::endgroup::"
-
-          echo "::group::Installing binary"
-          ssh -p 2222 -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "sudo mv /tmp/${{ env.BINARY_NAME }} /opt/terminal-portfolio/ && sudo chmod +x /opt/terminal-portfolio/${{ env.BINARY_NAME }}"
-          echo "::endgroup::"
-
-          echo "::group::Starting service"
-          ssh -p 2222 -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "sudo systemctl start portfolio"
-          echo "::endgroup::"
-
-      - name: Health Check with Retry
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-          EC2_USER: ${{ secrets.EC2_USER }}
-        run: |
-          echo "Waiting for service to stabilize..."
-          sleep 5
-
-          # Retry health check up to 3 times
-          for i in 1 2 3; do
-            echo "Health check attempt $i..."
-            if ssh -p 2222 -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "sudo systemctl is-active portfolio"; then
-              echo "✅ Service is healthy!"
-              ssh -p 2222 -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "sudo systemctl status portfolio --no-pager"
-              exit 0
-            fi
-            echo "Service not ready, waiting 5s..."
-            sleep 5
-          done
-
-          echo "❌ Health check failed after 3 attempts"
-          ssh -p 2222 -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "sudo journalctl -u portfolio -n 50 --no-pager" || true
-          exit 1
-
-      - name: Verify SSH Port
-        env:
-          EC2_HOST: ${{ secrets.EC2_HOST }}
-        run: |
-          echo "Testing SSH connection to portfolio on port 22..."
-          timeout 5 bash -c "echo '' | nc -v $EC2_HOST 22" || echo "Port 22 is responding"
+          set -euo pipefail
+          [[ "$DROPLET_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]] || { echo "Set DROPLET_HOST to the droplet IPv4 address or admin hostname" >&2; exit 1; }
+          [[ "$DROPLET_USER" =~ ^[a-z_][a-z0-9_-]*$ ]] || { echo "Set DROPLET_USER" >&2; exit 1; }
+          [[ "$DROPLET_SSH_PORT" =~ ^[1-9][0-9]{0,4}$ ]] && (( DROPLET_SSH_PORT <= 65535 && DROPLET_SSH_PORT != 22 )) || { echo "Use a verified admin SSH port other than 22" >&2; exit 1; }
+          [[ -n "$DROPLET_SSH_PRIVATE_KEY" && -n "$DROPLET_KNOWN_HOSTS" ]] || { echo "Configure the deploy key and verified known-hosts entry" >&2; exit 1; }
+          umask 077
+          printf '%s\n' "$DROPLET_SSH_PRIVATE_KEY" > "$RUNNER_TEMP/portfolio-key"
+          printf '%s\n' "$DROPLET_KNOWN_HOSTS" > "$RUNNER_TEMP/portfolio-known-hosts"
+          options=(-F /dev/null -i "$RUNNER_TEMP/portfolio-key" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$RUNNER_TEMP/portfolio-known-hosts" -o ConnectTimeout=10)
+          target="$DROPLET_USER@$DROPLET_HOST"
+          remote_dir="/opt/terminal-portfolio/releases/$RELEASE_ID"
+          ssh "${options[@]}" -p "$DROPLET_SSH_PORT" "$target" 'test "$(uname -m)" = x86_64 && command -v flock >/dev/null && docker compose version && test -f /opt/terminal-portfolio/.env'
+          ssh "${options[@]}" -p "$DROPLET_SSH_PORT" "$target" "mkdir -p '$remote_dir'"
+          scp "${options[@]}" -P "$DROPLET_SSH_PORT" release/portfolio-image.tar.gz release/docker-compose.yml release/update.sh "$target:$remote_dir/"
+          ssh "${options[@]}" -p "$DROPLET_SSH_PORT" "$target" "bash '$remote_dir/update.sh'"

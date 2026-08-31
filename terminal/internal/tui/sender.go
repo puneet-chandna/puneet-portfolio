@@ -2,17 +2,33 @@ package tui
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"html"
 	"io"
 	"net/http"
+	"net/mail"
 	"os"
+	"strings"
+	"sync"
 	"time"
-
-	"github.com/charmbracelet/log"
+	"unicode"
 )
 
-const resendAPIURL = "https://api.resend.com/emails"
+const (
+	resendAPIURL       = "https://api.resend.com/emails"
+	contactMaxName     = 50
+	contactMaxEmail    = 100
+	contactMaxMessage  = 500
+	contactMinInterval = 10 * time.Second
+)
+
+var (
+	resendEndpoint  = resendAPIURL
+	contactMu       sync.Mutex
+	lastContactSend time.Time
+)
 
 type ResendPayload struct {
 	From    string   `json:"from"`
@@ -22,81 +38,95 @@ type ResendPayload struct {
 	ReplyTo string   `json:"reply_to"`
 }
 
-type ResendResponse struct {
-	ID      string `json:"id"`
-	Message string `json:"message"`
+func ContactFormConfigured() bool {
+	return os.Getenv("RESEND_API_KEY") != "" && os.Getenv("RESEND_FROM") != "" && os.Getenv("RESEND_TO") != ""
 }
 
-func SendContactForm(name, email, message string) error {
-	apiKey := os.Getenv("RESEND_API_KEY")
-
-	// Log for debugging
-	if apiKey == "" {
-		log.Error("RESEND_API_KEY environment variable is not set")
-		return fmt.Errorf("RESEND_API_KEY not configured")
+func validateContact(name, email, message string) (string, string, string, error) {
+	name, email, message = strings.TrimSpace(name), strings.TrimSpace(email), strings.TrimSpace(message)
+	if name == "" || message == "" {
+		return "", "", "", fmt.Errorf("name and message are required")
 	}
-	log.Info("Sending contact form via Resend", "name", name, "email", email)
+	if len([]rune(name)) > contactMaxName || len([]rune(email)) > contactMaxEmail || len([]rune(message)) > contactMaxMessage {
+		return "", "", "", fmt.Errorf("message is too long")
+	}
+	if strings.IndexFunc(name+email+message, unicode.IsControl) >= 0 {
+		return "", "", "", fmt.Errorf("control characters are not allowed")
+	}
+	parsed, err := mail.ParseAddress(email)
+	if err != nil || parsed.Address != email {
+		return "", "", "", fmt.Errorf("enter a valid email address")
+	}
+	return name, email, message, nil
+}
 
-	// Create HTML email body
-	htmlBody := fmt.Sprintf(`
-		<h2>New Contact from Terminal Portfolio</h2>
-		<p><strong>Name:</strong> %s</p>
-		<p><strong>Email:</strong> %s</p>
-		<p><strong>Message:</strong></p>
-		<p>%s</p>
-		<hr>
-		<p><em>Sent from SSH Terminal Portfolio</em></p>
-	`, name, email, message)
+func reserveContactAttempt() (time.Time, error) {
+	contactMu.Lock()
+	defer contactMu.Unlock()
+	if wait := contactMinInterval - time.Since(lastContactSend); !lastContactSend.IsZero() && wait > 0 {
+		return time.Time{}, fmt.Errorf("please wait %d seconds before trying again", int(wait.Seconds())+1)
+	}
+	// ponytail: one process-wide limit; use shared storage if multiple replicas need a global quota.
+	lastContactSend = time.Now()
+	return lastContactSend, nil
+}
 
-	// Resend requires a verified domain or use onboarding@resend.dev for testing
+func rollbackContactAttempt(attempt time.Time) {
+	contactMu.Lock()
+	defer contactMu.Unlock()
+	if lastContactSend == attempt {
+		lastContactSend = time.Time{}
+	}
+}
+
+func SendContactForm(ctx context.Context, name, email, message string) error {
+	name, email, message, err := validateContact(name, email, message)
+	if err != nil {
+		return err
+	}
+	if !ContactFormConfigured() {
+		return fmt.Errorf("contact form is unavailable until email delivery is configured")
+	}
 	payload := ResendPayload{
-		From:    "Terminal Portfolio <onboarding@resend.dev>",
-		To:      []string{"puneetchandna7@gmail.com"},
-		Subject: fmt.Sprintf("New message from %s via Terminal Portfolio", name),
-		Html:    htmlBody,
+		From:    os.Getenv("RESEND_FROM"),
+		To:      []string{os.Getenv("RESEND_TO")},
+		Subject: "New message via Terminal Portfolio",
+		Html: fmt.Sprintf("<h2>New Contact from Terminal Portfolio</h2><p><strong>Name:</strong> %s</p><p><strong>Email:</strong> %s</p><p><strong>Message:</strong></p><p>%s</p>",
+			html.EscapeString(name), html.EscapeString(email), html.EscapeString(message)),
 		ReplyTo: email,
 	}
 
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
-		log.Error("Failed to marshal JSON", "error", err)
-		return err
+		return fmt.Errorf("could not prepare message")
 	}
 
-	req, err := http.NewRequest("POST", resendAPIURL, bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, resendEndpoint, bytes.NewReader(jsonData))
 	if err != nil {
-		log.Error("Failed to create request", "error", err)
-		return err
+		return fmt.Errorf("could not prepare message")
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Authorization", "Bearer "+os.Getenv("RESEND_API_KEY"))
 
+	attempt, err := reserveContactAttempt()
+	if err != nil {
+		return err
+	}
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Error("HTTP request failed", "error", err)
-		return err
+		rollbackContactAttempt(attempt)
+		return fmt.Errorf("unable to send right now; please try again")
 	}
 	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Error("Failed to read response body", "error", err)
-		return err
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		rollbackContactAttempt(attempt)
+		return fmt.Errorf("email provider could not accept the message; please try again")
 	}
-
-	var apiResp ResendResponse
-	if err := json.Unmarshal(body, &apiResp); err != nil {
-		log.Error("Failed to parse API response", "error", err, "body", string(body))
-		return err
+	if _, err := io.Copy(io.Discard, io.LimitReader(resp.Body, 1<<20)); err != nil {
+		return fmt.Errorf("unable to read delivery response")
 	}
-
-	if resp.StatusCode != 200 {
-		log.Error("Resend API returned error", "status", resp.StatusCode, "message", apiResp.Message, "body", string(body))
-		return fmt.Errorf("API error: %s", apiResp.Message)
-	}
-
-	log.Info("Contact form sent successfully", "id", apiResp.ID)
 	return nil
 }

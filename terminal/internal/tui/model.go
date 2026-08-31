@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"context"
+	"fmt"
 	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -32,28 +34,30 @@ type Model struct {
 	Projects     []data.Project
 	Bio          string
 	Experience   string
+	Context      context.Context
 
 	// Contact form
 	ContactInputs []textinput.Model
 	ContactFocus  int
+	ContactError  string
 	SendingFrame  int
 	ShowHelp      bool
 	ProjectIndex  int // For scrolling through projects
 
 	// Scrollable viewport
-	Viewport      viewport.Model
-	ViewportReady bool
-
-	// Animation frame for nav hints
-	NavHintFrame int
+	Viewport    viewport.Model
+	viewportTab string
 
 	// Per-session styles (for proper SSH color rendering)
 	Styles Styles
 }
 
 type tickMsg time.Time
+type sendingTickMsg time.Time
 type bootDoneMsg struct{}
-type sendDoneMsg struct{}
+type sendResultMsg struct{ err error }
+
+const contactInputFrameWidth = 4
 
 // NewModel creates a model with default styles (for local testing)
 func NewModel() Model {
@@ -93,19 +97,32 @@ func NewModelWithRenderer(r *lipgloss.Renderer) Model {
 		Projects:      data.GetProjects(),
 		Bio:           data.GetBio(),
 		Experience:    data.GetExperience(),
+		Context:       context.Background(),
 		ContactInputs: []textinput.Model{nameInput, emailInput, msgInput},
 		ContactFocus:  0,
 		ShowHelp:      false,
 		ProjectIndex:  0,
 		Viewport:      vp,
-		ViewportReady: false,
-		NavHintFrame:  0,
 		Styles:        NewStyles(r),
 	}
 }
 
 func (m Model) Init() tea.Cmd {
 	return tea.Batch(tickCmd(), tea.EnterAltScreen)
+}
+
+func (m Model) contactFormWidth() int {
+	return min(54, max(1, m.Width-2))
+}
+
+func (m Model) contactInputWidth(input textinput.Model) int {
+	return max(1, m.contactFormWidth()-contactInputFrameWidth-lipgloss.Width(input.Prompt)-1)
+}
+
+func (m *Model) resizeContactInputs() {
+	for i := range m.ContactInputs {
+		m.ContactInputs[i].Width = m.contactInputWidth(m.ContactInputs[i])
+	}
 }
 
 func tickCmd() tea.Cmd {
@@ -123,17 +140,17 @@ func (m Model) ActiveTab() string {
 }
 
 func (m Model) GetHeader() string {
-	status := m.Styles.Success.Render("● ONLINE")
 	tab := "/" + m.ActiveTab()
-	title := m.Styles.Title.Render("PUNEET-OS v1.0")
+	title := m.Styles.Title.MarginBottom(0).Render("PUNEET-OS v1.0")
 
 	left := title
 	center := m.Styles.Dim.Render(tab)
-	right := status
+	right := m.Styles.Success.Render("● ONLINE")
 
 	leftWidth := lipgloss.Width(left)
 	rightWidth := lipgloss.Width(right)
-	centerWidth := m.Width - leftWidth - rightWidth - 4
+	contentWidth := max(0, m.Width-m.Styles.Header.GetHorizontalPadding())
+	centerWidth := contentWidth - leftWidth - rightWidth
 
 	if centerWidth < 0 {
 		centerWidth = 0
@@ -146,7 +163,7 @@ func (m Model) GetHeader() string {
 		right,
 	)
 
-	return m.Styles.Header.Width(m.Width).Render(header)
+	return m.Styles.Header.Width(max(0, m.Width-m.Styles.Header.GetHorizontalBorderSize())).Render(header)
 }
 
 func (m Model) GetFooter() string {
@@ -156,19 +173,22 @@ func (m Model) GetFooter() string {
 		controls = m.Styles.Dim.Render("[Tab] Next field  [Enter] Send  [Esc] Back")
 	case StateMain:
 		if m.ShowHelp {
-			controls = m.Styles.Dim.Render("[?] Hide help  [↑↓/jk] Navigate  [Enter] Select  [q] Exit")
+			controls = m.Styles.Dim.Render("[?] Help  [↑↓/jk] Select  [PgUp/PgDn] Scroll  [q] Exit")
 		} else {
-			controls = m.Styles.Dim.Render("[?] Help  [↑↓/jk] Navigate  [Enter] Select  [q] Exit")
+			controls = m.Styles.Dim.Render("[?] Help  [↑↓/jk] Select  [PgUp/PgDn] Scroll  [q] Exit")
 		}
 	default:
 		controls = m.Styles.Dim.Render("[↑↓/jk] Navigate  [Enter] Select  [q] Exit")
 	}
 
-	pos := m.Styles.Dim.Render("Ln 1, Col 1")
-
 	leftWidth := lipgloss.Width(controls)
-	rightWidth := lipgloss.Width(pos)
-	gap := m.Width - leftWidth - rightWidth - 4
+	contentWidth := max(0, m.Width-m.Styles.Footer.GetHorizontalPadding())
+	pos := m.Styles.Dim.Render(fmt.Sprintf("Ln %d, Col 1", m.Viewport.YOffset+1))
+	gap := contentWidth - leftWidth - lipgloss.Width(pos)
+	if gap < 2 {
+		pos = ""
+		gap = contentWidth - leftWidth
+	}
 
 	if gap < 0 {
 		gap = 0
@@ -181,5 +201,5 @@ func (m Model) GetFooter() string {
 		pos,
 	)
 
-	return m.Styles.Footer.Width(m.Width).Render(footer)
+	return m.Styles.Footer.Width(max(0, m.Width-m.Styles.Footer.GetHorizontalBorderSize())).Render(footer)
 }

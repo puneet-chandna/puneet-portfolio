@@ -9,7 +9,7 @@ import {
 } from 'react-icons/fa'
 
 const quickFacts = [
-  { icon: FaGraduationCap, text: 'B.Tech CSE @ VIT Chennai (2026)' },
+  { icon: FaGraduationCap, text: 'B.Tech CSE Graduate, VIT Chennai (2026)' },
   { icon: FaFlask, text: 'Research: VM Placement Optimization' },
   { icon: FaChartLine, text: '50% community growth at DAO' },
   { icon: FaChalkboardTeacher, text: 'Mentored 25+ blockchain devs' },
@@ -30,7 +30,10 @@ export default function About() {
         <div className="about-content">
           <div className="about-text">
             <p>
-              I am <span className="highlight">Puneet Chandna</span>, a software engineer and problem solver based in India, currently a final year student at <span className="highlight">VIT Chennai</span>. 
+              I am <span className="highlight">Puneet Chandna</span>, a software engineer and problem solver based in India, and a 2026 B.Tech CSE graduate of <span className="highlight">VIT Chennai</span>.
+            </p>
+            <p>
+              Since March 2026, I’ve been a <span className="highlight">Product Developer at Hyr.works (Zofa AI Solutions Pvt. Ltd.)</span>, working on the recruiter platform, hiring integrations, tenant security, reliable interview recording, and production monitoring. I also independently researched, designed, and built the <span className="highlight">hyr.works</span> website.
             </p>
             <p>
               My professional experience includes a <span className="highlight">Backend Engineering Internship at Apoliums Infotech India Pvt. Ltd.</span>, where I worked on scalable backend services using <span className="highlight">Golang (Gin), MySQL, and Google Cloud Platform</span>. I’ve also worked as a Research Intern at <span className="highlight">CeAT VIT</span> and a Full Stack Developer Intern at <span className="highlight">Daira EdTech</span>, with experience across API design, database optimization, simulations, and production-focused systems.
