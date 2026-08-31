@@ -45,13 +45,13 @@ jobs:
       - name: Build and smoke-test container
         working-directory: terminal
         run: |
-          docker build --platform linux/amd64 -t "puneet-terminal:$RELEASE_ID" .
-          PORTFOLIO_IMAGE="puneet-terminal:$RELEASE_ID" PORTFOLIO_BIND_IP=127.0.0.1 PORTFOLIO_PORT=0 \
-            docker compose --project-name portfolio-ci up -d --no-build --pull never --wait --wait-timeout 60 portfolio
+          docker build --platform linux/amd64 -t "hyr-remote-console:$RELEASE_ID" .
+          CONSOLE_IMAGE="hyr-remote-console:$RELEASE_ID" CONSOLE_BIND_IP=127.0.0.1 CONSOLE_PORT=0 \
+            docker compose --project-name console-ci up -d --no-build --pull never --wait --wait-timeout 60 console
       - name: Package tested image and deployment files
         run: |
           mkdir release
-          docker image save "puneet-terminal:$RELEASE_ID" | gzip > release/portfolio-image.tar.gz
+          docker image save "hyr-remote-console:$RELEASE_ID" | gzip > release/console-image.tar.gz
           cp terminal/docker-compose.yml terminal/deploy/update.sh release/
       - uses: actions/upload-artifact@v4
         with:
@@ -61,14 +61,14 @@ jobs:
 
   deploy:
     needs: build
-    if: github.ref == 'refs/heads/main' && vars.PORTFOLIO_DEPLOY_ENABLED == 'true'
+    if: github.ref == 'refs/heads/main' && vars.CONSOLE_DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: production
     env:
       DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
       DROPLET_USER: ${{ secrets.DROPLET_USER }}
-      DROPLET_SSH_PORT: ${{ vars.DROPLET_SSH_PORT || '2222' }}
+      DROPLET_SSH_PORT: ${{ vars.DROPLET_SSH_PORT || '22' }}
       DROPLET_SSH_PRIVATE_KEY: ${{ secrets.DROPLET_SSH_PRIVATE_KEY }}
       DROPLET_KNOWN_HOSTS: ${{ secrets.DROPLET_KNOWN_HOSTS }}
     steps:
@@ -76,21 +76,21 @@ jobs:
         with:
           name: terminal-release
           path: release
-      - name: Deploy only the portfolio service
+      - name: Deploy only the remote console service
         shell: bash
         run: |
           set -euo pipefail
           [[ "$DROPLET_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]] || { echo "Set DROPLET_HOST to the droplet IPv4 address or admin hostname" >&2; exit 1; }
           [[ "$DROPLET_USER" =~ ^[a-z_][a-z0-9_-]*$ ]] || { echo "Set DROPLET_USER" >&2; exit 1; }
-          [[ "$DROPLET_SSH_PORT" =~ ^[1-9][0-9]{0,4}$ ]] && (( DROPLET_SSH_PORT <= 65535 && DROPLET_SSH_PORT != 22 )) || { echo "Use a verified admin SSH port other than 22" >&2; exit 1; }
+          [[ "$DROPLET_SSH_PORT" =~ ^[1-9][0-9]{0,4}$ ]] && (( DROPLET_SSH_PORT <= 65535 )) || { echo "Set a valid DROPLET_SSH_PORT" >&2; exit 1; }
           [[ -n "$DROPLET_SSH_PRIVATE_KEY" && -n "$DROPLET_KNOWN_HOSTS" ]] || { echo "Configure the deploy key and verified known-hosts entry" >&2; exit 1; }
           umask 077
           printf '%s\n' "$DROPLET_SSH_PRIVATE_KEY" > "$RUNNER_TEMP/portfolio-key"
           printf '%s\n' "$DROPLET_KNOWN_HOSTS" > "$RUNNER_TEMP/portfolio-known-hosts"
           options=(-F /dev/null -i "$RUNNER_TEMP/portfolio-key" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$RUNNER_TEMP/portfolio-known-hosts" -o ConnectTimeout=10)
           target="$DROPLET_USER@$DROPLET_HOST"
-          remote_dir="/opt/terminal-portfolio/releases/$RELEASE_ID"
-          ssh "${options[@]}" -p "$DROPLET_SSH_PORT" "$target" 'test "$(uname -m)" = x86_64 && command -v flock >/dev/null && docker compose version && test -f /opt/terminal-portfolio/.env'
+          remote_dir="/opt/hyr-remote-console/releases/$RELEASE_ID"
+          ssh "${options[@]}" -p "$DROPLET_SSH_PORT" "$target" 'test "$(uname -m)" = x86_64 && command -v flock >/dev/null && docker compose version && test -f /opt/hyr-remote-console/.env'
           ssh "${options[@]}" -p "$DROPLET_SSH_PORT" "$target" "mkdir -p '$remote_dir'"
-          scp "${options[@]}" -P "$DROPLET_SSH_PORT" release/portfolio-image.tar.gz release/docker-compose.yml release/update.sh "$target:$remote_dir/"
+          scp "${options[@]}" -P "$DROPLET_SSH_PORT" release/console-image.tar.gz release/docker-compose.yml release/update.sh "$target:$remote_dir/"
           ssh "${options[@]}" -p "$DROPLET_SSH_PORT" "$target" "bash '$remote_dir/update.sh'"

@@ -302,9 +302,9 @@ puneet-portfolio/
 
 Follow the [DigitalOcean deployment guide](terminal/deploy/DIGITALOCEAN.md) to deploy through GitHub Actions and connect `ssh puneet.space`.
 
-The workflow builds and tests the image, updates only the portfolio container, and rolls back an unhealthy release. Deployment stays disabled until `PORTFOLIO_DEPLOY_ENABLED=true` and the required GitHub secrets are configured.
+The workflow builds and tests the image, updates only the portfolio container, and rolls back an unhealthy release. Deployment stays disabled until `CONSOLE_DEPLOY_ENABLED=true` and the required GitHub secrets are configured.
 
-> ⚠️ Verify admin SSH on a separate port before assigning port **22** to the portfolio. The guide covers existing containers, persistent host keys, and DNS. The public endpoint still needs droplet/DNS setup.
+> ⚠️ Keep admin SSH and deployment automation on the Droplet's primary IP; the reserved IP serves the portfolio on port **22**. The guide covers container isolation, persistent host keys, and DNS.
 
 ### Web Deployment (Vercel)
 

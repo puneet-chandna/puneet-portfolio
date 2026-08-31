@@ -17,7 +17,7 @@ for previous, fail, locked in [(False, False, False), (True, True, False), (Fals
         release = app / "releases" / NEW
         release.mkdir(parents=True)
         shutil.copyfile(SCRIPT, release / "update.sh")
-        (release / "portfolio-image.tar.gz").touch()
+        (release / "console-image.tar.gz").touch()
         (release / "docker-compose.yml").touch()
         (app / ".env").touch()
         if previous:
@@ -31,13 +31,13 @@ for previous, fail, locked in [(False, False, False), (True, True, False), (Fals
         docker.write_text('''#!/usr/bin/env python3
 import json, os, sys
 with open(os.environ["DOCKER_TEST_LOG"], "a") as log:
-    log.write(json.dumps([sys.argv[1:], os.environ.get("PORTFOLIO_IMAGE")]) + "\\n")
-sys.exit(1 if "up" in sys.argv and os.environ.get("PORTFOLIO_IMAGE") == os.environ.get("FAIL_IMAGE") else 0)
+    log.write(json.dumps([sys.argv[1:], os.environ.get("CONSOLE_IMAGE")]) + "\\n")
+sys.exit(1 if "up" in sys.argv and os.environ.get("CONSOLE_IMAGE") == os.environ.get("FAIL_IMAGE") else 0)
 ''')
         docker.chmod(0o755)
         log = app / "docker.log"
         env = dict(os.environ, PATH=str(binary) + os.pathsep + os.environ["PATH"],
-                   DOCKER_TEST_LOG=str(log), FAIL_IMAGE="puneet-terminal:" + NEW if fail else "")
+                   DOCKER_TEST_LOG=str(log), FAIL_IMAGE="hyr-remote-console:" + NEW if fail else "")
         with (app / "deploy.lock").open("w") as lock:
             if locked:
                 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -47,19 +47,19 @@ sys.exit(1 if "up" in sys.argv and os.environ.get("PORTFOLIO_IMAGE") == os.envir
         calls = [json.loads(line) for line in log.read_text().splitlines()] if log.exists() else []
         if locked:
             assert not calls, calls
-            assert (release / "portfolio-image.tar.gz").exists()
+            assert (release / "console-image.tar.gz").exists()
         else:
-            assert not (release / "portfolio-image.tar.gz").exists()
+            assert not (release / "console-image.tar.gz").exists()
             compose_calls = [(args, image) for args, image in calls if args[0] == "compose"]
             for args, _ in compose_calls:
-                assert args[1:3] == ["--project-name", "puneet-terminal"], args
-                assert args[-1] == "portfolio" or args[-2:] == ["config", "--quiet"], args
+                assert args[1:3] == ["--project-name", "hyr-remote-console"], args
+                assert args[-1] == "console" or args[-2:] == ["config", "--quiet"], args
                 assert not {"down", "prune", "--remove-orphans"}.intersection(args), args
             if fail and previous:
                 args, image = compose_calls[-1]
-                assert "up" in args and image == "puneet-terminal:" + OLD, compose_calls
+                assert "up" in args and image == "hyr-remote-console:" + OLD, compose_calls
             elif fail:
-                assert compose_calls[-1][0][-2:] == ["stop", "portfolio"], compose_calls
+                assert compose_calls[-1][0][-2:] == ["stop", "console"], compose_calls
         if not fail and not locked:
             assert (app / "current").resolve() == release
         elif previous:
