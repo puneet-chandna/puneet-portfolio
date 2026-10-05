@@ -10,7 +10,7 @@ export const projects = [
   {
     id: 7,
     name: "Real-Time Dealer Gamma Exposure (GEX) Analysis",
-    description: "Full-stack 0DTE SPX monitor computing strike-level dealer GEX, zero-gamma, Charm/Vanna flow signals, and Kalman-smoothed regimes from live option chains.",
+    description: "Real-time quantitative analysis platform for SPX 0DTE options. Computes dealer gamma exposure, zero-gamma levels and Charm/Vanna hedging-flow estimates, with Kalman signal smoothing and Hawkes-style flow modeling. Combines live market feeds, historical replay and strategy backtesting to study intraday market structure.",
     stack: ["FastAPI", "Next.js", "PostgreSQL", "WebSocket"],
     year: 2026,
     status: "Live",
@@ -20,38 +20,39 @@ export const projects = [
   {
     id: 8,
     name: "Lattora",
-    description: "Terminal workbench for reproducible VM placement experiments, evolved from my CeAT research. Compares Hippopotamus Optimization, Genetic Algorithm, FirstFit and BestFit with CloudSim Plus. Includes live progress, retained experiment evidence and independent result validation, with offline standalone packages for Linux and Apple Silicon macOS.",
+    description: "Terminal workbench for reproducible VM placement experiments with CloudSim Plus. Compare four placement algorithms, inspect retained results and independently validate evidence, with offline packages for Linux and Apple Silicon macOS.",
     stack: ["Python", "Textual", "Java 21", "CloudSim Plus"],
     year: 2026,
     status: "Live",
     url: "https://github.com/puneet-chandna/Lattora",
-    image: "/projects/cloudsim-ho.webp"
+    image: "/projects/lattora.png",
+    imageFit: "contain"
+  },
+  {
+    id: 9,
+    name: "Requests Native",
+    description: "HTTP library pairing the familiar Python Requests API with a Rust transport via PyO3, plus native async and blocking Rust clients. Built around preserving Requests behavior.",
+    stack: ["Rust", "Python", "PyO3", "Tokio"],
+    year: 2026,
+    status: "Beta",
+    url: "https://github.com/puneet-chandna/requests-native",
+    image: "/projects/requests-native.png"
   },
   {
     id: 1,
     name: "ASCII Video Insanity",
-    description: "High-performance CLI media player rendering videos as colorized ASCII art at 30+ FPS with real-time image processing.",
-    stack: ["Python", "OpenCV", "PIL", "ANSI"],
+    description: "Terminal video player that turns MP4 frames into color ASCII art. Uses OpenCV and NumPy with adjustable character sets, quality presets and terminal-aware sizing.",
+    stack: ["Python", "OpenCV", "NumPy", "ANSI"],
     year: 2025,
     status: "Live",
     url: "https://github.com/puneet-chandna/ascii-video-insanity",
     image: "/projects/ascii.webp"
   },
   {
-    id: 2,
-    name: "Encryption Algorithm Using Dynamic S-boxes",
-    description: "Modified the AES algorithm to reduce encryption time by 51% through parallel processing. Achieved higher throughput  and robust security with dynamic S-boxes via SHA-512.",
-    stack: ["Python", "Multiprocessing", "SHA-512", "NumPy"],
-    year: 2025,
-    status: "Live",
-    url: "",
-    image: "/projects/aes.webp"
-  },
-  {
     id: 3,
     name: "Emotion-Aware Movie Recommender",
-    description: "NLP-powered recommendation engine using SBERT embeddings. Achieved 0.71 Macro F1 score with hybrid emotional state interpretation.",
-    stack: ["Python", "SBERT", "spaCy", "ML"],
+    description: "Exploratory NLP notebook that uses movie overviews, sentiment and Sentence-BERT embeddings to assign basic and hybrid mood labels, with visualizations of the resulting groups.",
+    stack: ["Python", "Sentence-BERT", "spaCy", "Jupyter"],
     year: 2025,
     status: "Live",
     url: "https://github.com/puneet-chandna/Emotion-Aware-Movie-Recommendation-System-Using-Hybrid-Emotional-States",
@@ -60,7 +61,7 @@ export const projects = [
   {
     id: 4,
     name: "Crop Stress Detection Model",
-    description: "Hybrid ML pipeline combining LSTM with attention and XGBoost for binary plant-health classification using 30-day sensor data.",
+    description: "Plant-health classifier combining an attention-based LSTM with XGBoost to detect crop stress from 30-day sensor sequences.",
     stack: ["Python", "LSTM", "XGBoost", "Scikit-learn"],
     year: 2025,
     status: "Live",
@@ -70,22 +71,12 @@ export const projects = [
   {
     id: 5,
     name: "Water Brakes",
-    description: "Streamlit app helping farmers optimize water management by analyzing contour maps for swale and trench placement.",
+    description: "Streamlit tool for exploring contour maps and planning swale and trench placement to support farm water management.",
     stack: ["Streamlit", "Python", "Plotly"],
     year: 2024,
     status: "Live",
     url: "https://water-brakes.streamlit.app/",
     image: "/projects/water.webp"
-  },
-  {
-    id: 6,
-    name: "BookMyEvent",
-    description: "Event management app processing ~10,000 ticket authentications per event with real-time QR code scanning via ESP32.",
-    stack: ["Node.js", "Express", "Flutter", "MongoDB"],
-    year: 2024,
-    status: "Live",
-    url: "https://github.com/puneet-chandna/bookmyshow_server",
-    image: "/projects/event.webp"
   }
 ];
 

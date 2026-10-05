@@ -27,6 +27,7 @@ export default function Projects() {
                 <img 
                   src={project.image} 
                   alt={project.name}
+                  style={{ objectFit: project.imageFit }}
                 />
               </div>
               <div style={{ padding: '20px' }}>

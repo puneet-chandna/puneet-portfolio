@@ -56,20 +56,16 @@ test('icon-only controls expose accessible names', async () => {
   assert.match(contact, /aria-label=\{copied \? 'SSH command copied' : 'Copy SSH command'\}/)
 })
 
-test('portfolio data includes the GEX and Lattora projects', async () => {
-  const portfolio = await readSource('src/data/portfolio.js')
+test('curated projects have current repository links and existing images', async () => {
+  const { projects } = await import('../src/data/portfolio.js')
 
-  assert.match(portfolio, /Real-Time Dealer Gamma Exposure \(GEX\) Analysis/)
-  assert.match(portfolio, /0DTE-dealer-gamma/)
-  assert.match(portfolio, /\/projects\/gex\.webp/)
-  assert.match(portfolio, /name: "Lattora"/)
-  assert.match(portfolio, /Centre for e-Automation Technologies \(CeAT\)/)
-  assert.match(portfolio, /https:\/\/github\.com\/puneet-chandna\/Lattora/)
-  assert.doesNotMatch(portfolio, /CloudSim-HO Research|cloudsim-ho-research/)
-  assert.match(portfolio, /\/projects\/cloudsim-ho\.webp/)
+  assert.equal(projects.find(project => project.name === 'Lattora').url, 'https://github.com/puneet-chandna/Lattora')
+  assert.equal(projects.find(project => project.name === 'Requests Native').url, 'https://github.com/puneet-chandna/requests-native')
+  assert.equal(projects.some(project => project.id === 2 || project.id === 6), false)
 
-  await stat(new URL('../public/projects/gex.webp', import.meta.url))
-  await stat(new URL('../public/projects/cloudsim-ho.webp', import.meta.url))
+  for (const project of projects) {
+    await stat(new URL(`../public${project.image}`, import.meta.url))
+  }
 })
 
 test('project thumbnails render in square frames', async () => {
