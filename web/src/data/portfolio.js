@@ -20,7 +20,7 @@ export const projects = [
   {
     id: 8,
     name: "Lattora",
-    description: "Terminal workbench for reproducible VM placement experiments with CloudSim Plus. Compare four placement algorithms, inspect retained results and independently validate evidence, with offline packages for Linux and Apple Silicon macOS.",
+    description: "A terminal workbench for studying how virtual machines are placed across cloud servers. Compare four placement algorithms, follow experiments as they run, and revisit the inputs, results and independent validation behind each comparison, with offline packages for Linux and Apple Silicon macOS.",
     stack: ["Python", "Textual", "Java 21", "CloudSim Plus"],
     year: 2026,
     status: "Live",
@@ -31,7 +31,7 @@ export const projects = [
   {
     id: 9,
     name: "Requests Native",
-    description: "HTTP library pairing the familiar Python Requests API with a Rust transport via PyO3, plus native async and blocking Rust clients. Built around preserving Requests behavior.",
+    description: "A Rust rewrite of Python’s Requests library that keeps its familiar API. Built around preserving the behaviors existing applications depend on—sessions, streaming, errors and custom adapters—with one shared HTTP engine for Python and Rust.",
     stack: ["Rust", "Python", "PyO3", "Tokio"],
     year: 2026,
     status: "Beta",
@@ -41,7 +41,7 @@ export const projects = [
   {
     id: 1,
     name: "ASCII Video Insanity",
-    description: "Terminal video player that turns MP4 frames into color ASCII art. Uses OpenCV and NumPy with adjustable character sets, quality presets and terminal-aware sizing.",
+    description: "Play videos directly in your terminal as moving, full-color character art. Converts each frame into text, with different character sets and quality controls to balance visual detail with playback performance.",
     stack: ["Python", "OpenCV", "NumPy", "ANSI"],
     year: 2025,
     status: "Live",
@@ -51,7 +51,7 @@ export const projects = [
   {
     id: 3,
     name: "Emotion-Aware Movie Recommender",
-    description: "Exploratory NLP notebook that uses movie overviews, sentiment and Sentence-BERT embeddings to assign basic and hybrid mood labels, with visualizations of the resulting groups.",
+    description: "Explores how movies can be grouped by emotional tone. Uses plot descriptions to identify basic and mixed moods, then visualizes those groupings in a research notebook.",
     stack: ["Python", "Sentence-BERT", "spaCy", "Jupyter"],
     year: 2025,
     status: "Live",
@@ -61,8 +61,8 @@ export const projects = [
   {
     id: 4,
     name: "Crop Stress Detection Model",
-    description: "Plant-health classifier combining an attention-based LSTM with XGBoost to detect crop stress from 30-day sensor sequences.",
-    stack: ["Python", "LSTM", "XGBoost", "Scikit-learn"],
+    description: "Studies crop health through patterns in 30 days of sensor readings. Combines a  Attention-based LSTM model that follows changes over time with a second  XGBoost classifier to distinguish healthy plants from stressed ones.",
+    stack: ["Python", "LSTM", "XGBoost", "Scikit-learn", "Attention"],
     year: 2025,
     status: "Live",
     url: "",
@@ -71,7 +71,7 @@ export const projects = [
   {
     id: 5,
     name: "Water Brakes",
-    description: "Streamlit tool for exploring contour maps and planning swale and trench placement to support farm water management.",
+    description: "Turns terrain survey data into interactive maps for exploring where water could collect or drain. Groups areas by slope and elevation to suggest swale and trench locations, with downloadable data and reports for planning.",
     stack: ["Streamlit", "Python", "Plotly"],
     year: 2024,
     status: "Live",
