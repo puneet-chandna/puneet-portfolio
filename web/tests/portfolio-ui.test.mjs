@@ -4,6 +4,14 @@ import { test } from 'node:test'
 
 const readSource = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8')
 
+test('portfolio data loads with valid skill icons', async () => {
+  const { skills } = await import('../src/data/portfolio.js')
+
+  for (const skill of skills) {
+    assert.equal(typeof skill.icon, 'function', skill.name)
+  }
+})
+
 test('navbar exposes an accessible mobile menu', async () => {
   const navbar = await readSource('src/components/ui/Navbar.jsx')
 
@@ -48,15 +56,16 @@ test('icon-only controls expose accessible names', async () => {
   assert.match(contact, /aria-label=\{copied \? 'SSH command copied' : 'Copy SSH command'\}/)
 })
 
-test('portfolio data includes the GEX and CloudSim research projects', async () => {
+test('portfolio data includes the GEX and Lattora projects', async () => {
   const portfolio = await readSource('src/data/portfolio.js')
 
   assert.match(portfolio, /Real-Time Dealer Gamma Exposure \(GEX\) Analysis/)
   assert.match(portfolio, /0DTE-dealer-gamma/)
   assert.match(portfolio, /\/projects\/gex\.webp/)
-  assert.match(portfolio, /CloudSim-HO Research/)
+  assert.match(portfolio, /name: "Lattora"/)
   assert.match(portfolio, /Centre for e-Automation Technologies \(CeAT\)/)
-  assert.match(portfolio, /cloudsim-ho-research/)
+  assert.match(portfolio, /https:\/\/github\.com\/puneet-chandna\/Lattora/)
+  assert.doesNotMatch(portfolio, /CloudSim-HO Research|cloudsim-ho-research/)
   assert.match(portfolio, /\/projects\/cloudsim-ho\.webp/)
 
   await stat(new URL('../public/projects/gex.webp', import.meta.url))

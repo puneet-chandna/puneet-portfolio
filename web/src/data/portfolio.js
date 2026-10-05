@@ -1,9 +1,10 @@
 import { 
   SiPython, SiJavascript, SiGo, SiCplusplus, SiReact, 
   SiNodedotjs, SiNextdotjs, SiMongodb, SiPostgresql, 
-  SiAmazonwebservices, SiDocker, SiLinux, SiGit, 
+  SiDocker, SiLinux, SiGit,
   SiThreedotjs, SiPytorch, SiGooglecloud
 } from 'react-icons/si'
+import { FaAws } from 'react-icons/fa'
 
 export const projects = [
   {
@@ -18,12 +19,12 @@ export const projects = [
   },
   {
     id: 8,
-    name: "CloudSim-HO Research",
-    description: "Centre for e-Automation Technologies (CeAT) research simulator implementing Hippopotamus Optimization for VM placement with CloudSim Plus benchmarking and statistical analysis.",
-    stack: ["Java 21", "Maven", "CloudSim Plus", "ANOVA"],
-    year: 2025,
-    status: "Research",
-    url: "https://github.com/puneet-chandna/cloudsim-ho-research",
+    name: "Lattora",
+    description: "Terminal workbench for reproducible VM placement experiments, evolved from my CeAT research. Compares Hippopotamus Optimization, Genetic Algorithm, FirstFit and BestFit with CloudSim Plus. Includes live progress, retained experiment evidence and independent result validation, with offline standalone packages for Linux and Apple Silicon macOS.",
+    stack: ["Python", "Textual", "Java 21", "CloudSim Plus"],
+    year: 2026,
+    status: "Live",
+    url: "https://github.com/puneet-chandna/Lattora",
     image: "/projects/cloudsim-ho.webp"
   },
   {
@@ -136,7 +137,7 @@ export const skills = [
   { name: "Next.js", icon: SiNextdotjs, color: "#FFFFFF" },
   { name: "MongoDB", icon: SiMongodb, color: "#47A248" },
   { name: "PostgreSQL", icon: SiPostgresql, color: "#4169E1" },
-  { name: "AWS", icon: SiAmazonwebservices, color: "#FF9900" },
+  { name: "AWS", icon: FaAws, color: "#FF9900" },
   { name: "Google Cloud", icon: SiGooglecloud, color: "#4285F4" },
   { name: "Docker", icon: SiDocker, color: "#2496ED" },
   { name: "Linux", icon: SiLinux, color: "#FCC624" },
