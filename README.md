@@ -157,6 +157,8 @@ The terminal keeps its Tron theme and follows the curated content in `web/src/da
 | `Tab/Shift+Tab` | Next/previous contact field; `Esc` returns without clearing the draft |
 | `q` / `Ctrl+C` | Disconnect from the main screen; `Ctrl+C` also disconnects while editing or sending |
 
+Disconnecting plays a glitch collapse across the full terminal, then holds “SIGNAL LOST” for one second before closing the SSH session (about 3.5 seconds total). Press `Ctrl+C` again to skip it. An active message request is cancelled as soon as you exit.
+
 An orange hint below the content shows whether there is more above or below. Narrow terminals hide the inspector and, below 60 columns, the menu to give the content room. The header still shows the active section; use `h/l` to switch sections and `?` for controls. Resizing preserves the scroll offset within the current content.
 
 Use `ssh puneet.space` in an interactive terminal. PTY shell requests and terminal-wrapper exec requests both open the portfolio; supplied bootstrap commands are ignored and never executed. Remote shell commands, file transfer and forwarding remain unavailable. If a terminal's own integration still interferes, `command ssh -tt puneet.space` bypasses shell wrappers.

@@ -12,6 +12,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/muesli/termenv"
 )
 
@@ -420,11 +421,175 @@ func TestContactSendingStillAllowsCtrlC(t *testing.T) {
 	m := NewModel()
 	m.State = StateContactSending
 	updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyCtrlC})
-	if updated.(Model).State != StateContactSending {
-		t.Fatal("Ctrl+C changed the sending state before quitting")
+	if updated.(Model).State != StateExiting {
+		t.Fatal("Ctrl+C did not start the disconnect animation while sending")
 	}
-	if _, ok := cmd().(tea.QuitMsg); !ok {
-		t.Fatal("Ctrl+C did not quit while sending")
+	if _, ok := cmd().(tea.QuitMsg); ok {
+		t.Fatal("Ctrl+C skipped the disconnect animation while sending")
+	}
+}
+
+func TestDisconnectPreservesFormTypingAndResize(t *testing.T) {
+	m := NewModel()
+	m.State = StateContactForm
+	m.focusContact(0)
+	m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}})
+	if m.State != StateContactForm || m.ContactInputs[0].Value() != "q" {
+		t.Fatal("q stopped working as form text")
+	}
+	m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyCtrlC})
+	firstFrame := m.View()
+	for range 12 {
+		m = updateModel(t, m, exitTickMsg{})
+	}
+	if m.View() == firstFrame {
+		t.Fatal("disconnect screen did not animate")
+	}
+	m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}})
+	m = updateModel(t, m, tea.WindowSizeMsg{Width: 40, Height: 16})
+	if m.State != StateExiting || m.ExitFrame != 12 || lipgloss.Width(m.View()) > 40 || lipgloss.Height(m.View()) > 16 {
+		t.Fatal("repeated exit or resize reset the animation or exceeded the terminal")
+	}
+}
+
+func TestExitActionsAnimateBeforeQuitting(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		state AppState
+		key   tea.KeyMsg
+		tab   int
+		help  bool
+	}{
+		{"boot", StateBoot, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}}, 0, false},
+		{"main", StateMain, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}}, 0, false},
+		{"help", StateMain, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}}, 0, true},
+		{"exit page", StateMain, tea.KeyMsg{Type: tea.KeyEnter}, 4, false},
+		{"form", StateContactForm, tea.KeyMsg{Type: tea.KeyCtrlC}, 3, false},
+		{"confirmation", StateContactSent, tea.KeyMsg{Type: tea.KeyCtrlC}, 3, false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			m := NewModel()
+			m.State = test.state
+			m.MenuIndex = test.tab
+			m.ShowHelp = test.help
+			m = updateModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 24})
+			updated, cmd := m.Update(test.key)
+			m = updated.(Model)
+			if m.State != StateExiting || cmd == nil {
+				t.Fatal("exit action did not animate")
+			}
+			if _, quit := cmd().(tea.QuitMsg); quit {
+				t.Fatal("exit action quit before animating")
+			}
+			m = updateModel(t, m, bootDoneMsg{})
+			m = updateModel(t, m, sendResultMsg{err: context.Canceled})
+			if m.State != StateExiting {
+				t.Fatal("late result interrupted the exit")
+			}
+			_, cmd = m.Update(tea.KeyMsg{Type: tea.KeyCtrlC})
+			if cmd == nil {
+				t.Fatal("second Ctrl+C did not quit")
+			}
+			if _, quit := cmd().(tea.QuitMsg); !quit {
+				t.Fatal("second Ctrl+C did not skip animation")
+			}
+		})
+	}
+}
+
+func TestDisconnectFramesFitAndFinish(t *testing.T) {
+	for _, size := range []tea.WindowSizeMsg{{Width: 32, Height: 15}, {Width: 80, Height: 24}, {Width: 160, Height: 45}, {Width: 8, Height: 5}, {Width: 1, Height: 1}, {Width: 250, Height: 70}} {
+		m := NewModel()
+		m.State = StateMain
+		m = updateModel(t, m, size)
+		updated, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}})
+		m = updated.(Model)
+		if cmd == nil {
+			t.Fatal("no animation tick")
+		}
+		tick := cmd()
+		if _, quit := tick.(tea.QuitMsg); quit {
+			t.Fatal("quit before animation")
+		}
+		sawSignal, quit := false, false
+		signalFrames := 0
+		for i := 0; i < 100; i++ {
+			view := m.View()
+			sawSignal = sawSignal || strings.Contains(view, "SIGNAL LOST")
+			if strings.Contains(view, "SIGNAL LOST") {
+				signalFrames++
+			}
+			if lipgloss.Height(view) > size.Height {
+				t.Fatal("shutdown exceeds terminal height")
+			}
+			for _, line := range strings.Split(view, "\n") {
+				if lipgloss.Width(line) > size.Width {
+					t.Fatal("shutdown exceeds terminal width")
+				}
+			}
+			updated, cmd = m.Update(tick)
+			m = updated.(Model)
+			if cmd == nil {
+				t.Fatal("shutdown lost its animation tick")
+			}
+			// Only the final command quits; intermediate commands schedule the same tick type.
+			if i >= exitSignalFrame+exitHoldFrames-1 {
+				if _, quit = cmd().(tea.QuitMsg); quit {
+					break
+				}
+			}
+		}
+		if !quit {
+			t.Fatal("shutdown did not finish within its bounded frame count")
+		}
+		if size.Width >= 32 && !sawSignal {
+			t.Fatal("shutdown did not show SIGNAL LOST")
+		}
+		if size.Width >= 32 && time.Duration(signalFrames)*exitFrameInterval < time.Second {
+			t.Fatal("SIGNAL LOST was not held for a full second")
+		}
+	}
+}
+
+func TestDisconnectStartsWithEntireCurrentScreen(t *testing.T) {
+	for _, size := range []tea.WindowSizeMsg{{Width: 80, Height: 24}, {Width: 160, Height: 45}} {
+		m := NewModel()
+		m.State = StateMain
+		m = updateModel(t, m, size)
+		before := m.View()
+		m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}})
+		if m.View() != before {
+			t.Errorf("%dx%d: disconnect cropped or replaced the first frame", size.Width, size.Height)
+		}
+		m = updateModel(t, m, exitTickMsg{})
+		lines := strings.Split(m.View(), "\n")
+		if strings.TrimSpace(ansi.Strip(lines[0])) == "" || strings.TrimSpace(ansi.Strip(lines[len(lines)-1])) == "" {
+			t.Error("effect does not reach the top and bottom of the screen")
+		}
+		m.ExitFrame = 8
+		if size.Width == 160 && !strings.Contains(m.View(), "OPERATOR FILE") {
+			t.Error("full-screen effect dropped the right-hand inspector")
+		}
+		for range 48 {
+			m = updateModel(t, m, exitTickMsg{})
+		}
+		if m.State != StateExiting || strings.Contains(m.View(), "SIGNAL LOST") {
+			t.Error("effect finished too soon to see the full collapse")
+		}
+	}
+}
+
+func BenchmarkDisconnectRendering(b *testing.B) {
+	m := NewModel()
+	m.State = StateMain
+	updated, _ := m.Update(tea.WindowSizeMsg{Width: 160, Height: 45})
+	m = updated.(Model)
+	updated, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'q'}})
+	m = updated.(Model)
+	m.ExitFrame = 12
+	b.ResetTimer()
+	for b.Loop() {
+		_ = m.View()
 	}
 }
 

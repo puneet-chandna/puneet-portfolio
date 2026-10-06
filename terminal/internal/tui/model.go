@@ -22,19 +22,24 @@ const (
 	StateContactForm
 	StateContactSending
 	StateContactSent
+	StateExiting
 )
 
 type Model struct {
-	Width        int
-	Height       int
-	State        AppState
-	BootProgress int
-	BootFrame    int
-	MenuIndex    int
-	Projects     []data.Project
-	Bio          string
-	Experience   string
-	Context      context.Context
+	Width         int
+	Height        int
+	State         AppState
+	BootProgress  int
+	BootFrame     int
+	MenuIndex     int
+	Projects      []data.Project
+	Bio           string
+	Experience    string
+	Context       context.Context
+	ContactCancel context.CancelFunc
+	ExitFrame     int
+	ExitView      string
+	ExitSnapshot  [][]rune
 
 	// Contact form
 	ContactInputs []textinput.Model
@@ -54,10 +59,18 @@ type Model struct {
 
 type tickMsg time.Time
 type sendingTickMsg time.Time
+type exitTickMsg time.Time
 type bootDoneMsg struct{}
 type sendResultMsg struct{ err error }
 
 const contactInputFrameWidth = 4
+
+const (
+	exitFrames        = 75
+	exitFrameInterval = 40 * time.Millisecond
+	exitSignalFrame   = 62
+	exitHoldFrames    = 25 // Keep SIGNAL LOST visible for one second.
+)
 
 // NewModel creates a model with default styles (for local testing)
 func NewModel() Model {
@@ -178,11 +191,11 @@ func (m Model) GetFooter() string {
 	case StateMain:
 		switch {
 		case m.Width < 60:
-			controls = m.Styles.Dim.Render("[?] Help [h/l] Tabs [q] Exit")
+			controls = m.Styles.Dim.Render("[?] Help [←→/hl] Tabs [q] Exit")
 		case m.Width < 90:
-			controls = m.Styles.Dim.Render("[?] Help [↑↓/jk] Scroll [h/l] Tabs [q] Exit")
+			controls = m.Styles.Dim.Render("[?] Help [↑↓/jk] Scroll [←→/hl] Tabs [q] Exit")
 		default:
-			controls = m.Styles.Dim.Render("[?] Help [↑↓/jk] Scroll [h/l] Tabs [PgUp/PgDn] Page [q] Exit")
+			controls = m.Styles.Dim.Render("[?] Help [↑↓/jk] Scroll [←→/hl] Tabs [PgUp/PgDn] Page [q] Exit")
 		}
 	default:
 		controls = m.Styles.Dim.Render("[↑↓/jk] Navigate  [Enter] Select  [q] Exit")

@@ -2,9 +2,11 @@ package tui
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/x/ansi"
 )
 
 var encryptChars = []string{"█", "▓", "▒", "░", "▪", "▫", "◆", "◇", "○", "●", "◐", "◑", "◒", "◓"}
@@ -26,10 +28,81 @@ func (m Model) View() string {
 		content = m.renderContactSending()
 	case StateContactSent:
 		content = m.renderContactSent()
+	case StateExiting:
+		content = m.renderDisconnect()
 	default:
 		content = m.renderMain()
 	}
 	return lipgloss.NewStyle().MaxWidth(m.Width).MaxHeight(m.Height).Render(content)
+}
+
+func (m Model) renderDisconnect() string {
+	// Keep the first frame identical to the page being closed, including colors.
+	if m.ExitFrame == 0 {
+		return m.ExitView
+	}
+	width, height := m.Width, m.Height
+	progress := float64(m.ExitFrame) / exitFrames
+	if m.ExitFrame >= exitSignalFrame {
+		content := m.Styles.Title.MarginBottom(0).Render(ansi.Truncate("SIGNAL LOST", width, "")) + "\n\n" +
+			m.Styles.Dim.Render(ansi.Truncate("See you on the other side.", width, ""))
+		return lipgloss.Place(width, height, lipgloss.Center, lipgloss.Center, content)
+	}
+
+	grid := make([][]rune, height)
+	for y := range grid {
+		grid[y] = []rune(strings.Repeat(" ", width))
+	}
+	// The demo's cubic easing and phases, stretched to three seconds for SSH.
+	easeOut := func(p float64) float64 { p = math.Max(0, math.Min(1, p)); return 1 - (1-p)*(1-p)*(1-p) }
+	collapse := easeOut((progress - .38) / .38)
+	middle, tick := height/2, int(progress*30)
+	glyphs := []rune("01░▒▓█<>/\\|:+*")
+	hash := func(x, y, t int) uint32 { return uint32(x+3)*92821 ^ uint32(y+7)*68917 ^ uint32(t+1)*17239 }
+	for y := range height {
+		targetY := int(math.Round(float64(middle) + float64(y-middle)*(1-collapse)))
+		shift := int(math.Round(math.Sin(float64(y)*2.3+float64(tick)) * progress * 7))
+		noise := hash(y, tick, 2)%4 == 0
+		for x := range width {
+			targetX := x + shift
+			if targetX < 0 || targetX >= width {
+				continue
+			}
+			cell := rune(' ')
+			if y < len(m.ExitSnapshot) && x < len(m.ExitSnapshot[y]) {
+				cell = m.ExitSnapshot[y][x]
+			}
+			if cell != ' ' || noise && hash(x, y, tick)%5 == 0 {
+				if noise {
+					cell = glyphs[hash(x, y, tick)%uint32(len(glyphs))]
+				}
+				grid[targetY][targetX] = cell
+			}
+		}
+	}
+	if progress > .5 {
+		// Replace the collided text with a clean beam as it contracts.
+		for x := range width {
+			grid[middle][x] = ' '
+		}
+		span := max(1, int(math.Round(float64(max(1, width-8))*(1-easeOut((progress-.58)/.24)))))
+		left := (width - span) / 2
+		for x := left; x < left+span; x++ {
+			grid[middle][x] = '━'
+		}
+	}
+	rows := make([]string, height)
+	cyan := m.Styles.Title.MarginBottom(0)
+	for y, row := range grid {
+		if hash(y, tick, 2)%4 == 0 {
+			rows[y] = m.Styles.AccentText.Render(string(row))
+		} else {
+			rows[y] = cyan.Render(string(row))
+		}
+	}
+	rows[0] = m.Styles.AccentText.Render(ansi.Truncate("DISCONNECTING", width, ""))
+	rows[height-1] = m.Styles.Dim.Render(ansi.Truncate("[Ctrl+C] Skip", width, ""))
+	return strings.Join(rows, "\n")
 }
 
 func (m Model) renderBoot() string {

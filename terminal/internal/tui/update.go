@@ -2,9 +2,11 @@ package tui
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/x/ansi"
 )
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -46,14 +48,33 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	case exitTickMsg:
+		if m.State == StateExiting {
+			m.ExitFrame++
+			if m.ExitFrame >= exitSignalFrame+exitHoldFrames {
+				return m, tea.Quit
+			}
+			return m, exitTickCmd()
+		}
+		return m, nil
+
 	case tickMsg:
 		return m.handleTick()
 
 	case bootDoneMsg:
-		m.State = StateMain
+		if m.State == StateAccessGranted {
+			m.State = StateMain
+		}
 		return m, nil
 
 	case sendResultMsg:
+		if m.ContactCancel != nil {
+			m.ContactCancel()
+			m.ContactCancel = nil
+		}
+		if m.State != StateContactSending {
+			return m, nil
+		}
 		if msg.err != nil {
 			m.State = StateContactForm
 			m.ContactError = msg.err.Error()
@@ -87,20 +108,22 @@ func (m Model) updateContactInputs(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	// During boot sequence, any key skips to main
-	if m.State == StateBoot || m.State == StateLoading || m.State == StateAccessGranted {
-		if msg.String() == "q" || msg.String() == "ctrl+c" {
+	if m.State == StateExiting {
+		if msg.String() == "ctrl+c" {
 			return m, tea.Quit
 		}
+		return m, nil
+	}
+	if msg.String() == "ctrl+c" || (msg.String() == "q" && m.State != StateContactForm) {
+		return m.startExit()
+	}
+	// During boot sequence, any key skips to main
+	if m.State == StateBoot || m.State == StateLoading || m.State == StateAccessGranted {
 		m.State = StateMain
 		return m, nil
 	}
 
-	// Allow an immediate exit while delivery observes the session context.
 	if m.State == StateContactSending {
-		if msg.String() == "ctrl+c" {
-			return m, tea.Quit
-		}
 		return m, nil
 	}
 
@@ -125,16 +148,11 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "?", "esc":
 			m.ShowHelp = false
-		case "q", "ctrl+c":
-			return m, tea.Quit
 		}
 		return m, nil
 	}
 
 	switch msg.String() {
-	case "q", "ctrl+c":
-		return m, tea.Quit
-
 	case "?":
 		m.ShowHelp = !m.ShowHelp
 
@@ -152,7 +170,7 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	case "enter":
 		if m.ActiveTab() == "exit" {
-			return m, tea.Quit
+			return m.startExit()
 		}
 		if m.ActiveTab() == "contact" {
 			if !ContactFormConfigured() {
@@ -211,9 +229,6 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 func (m Model) handleContactFormKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.String() {
-	case "ctrl+c":
-		return m, tea.Quit
-
 	case "esc":
 		m.State = StateMain
 		m.ContactInputs[m.ContactFocus].Blur()
@@ -245,7 +260,12 @@ func (m Model) handleContactFormKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		}
 		m.State = StateContactSending
 		m.SendingFrame = 0
-		return m, tea.Batch(m.sendContactCmd(), sendingTickCmd())
+		ctx := m.Context
+		if ctx == nil {
+			ctx = context.Background()
+		}
+		ctx, m.ContactCancel = context.WithCancel(ctx)
+		return m, tea.Batch(m.sendContactCmd(ctx), sendingTickCmd())
 	}
 
 	// Pass other keys to the focused input
@@ -263,11 +283,7 @@ func (m *Model) focusContact(index int) {
 	m.ContactInputs[index].Focus()
 }
 
-func (m Model) sendContactCmd() tea.Cmd {
-	ctx := m.Context
-	if ctx == nil {
-		ctx = context.Background()
-	}
+func (m Model) sendContactCmd(ctx context.Context) tea.Cmd {
 	name, email, message := m.ContactInputs[0].Value(), m.ContactInputs[1].Value(), m.ContactInputs[2].Value()
 	return func() tea.Msg { return sendResultMsg{err: SendContactForm(ctx, name, email, message)} }
 }
@@ -317,4 +333,41 @@ func clamp(value, min, max int) int {
 
 func sendingTickCmd() tea.Cmd {
 	return tea.Tick(80*time.Millisecond, func(t time.Time) tea.Msg { return sendingTickMsg(t) })
+}
+
+func (m Model) startExit() (tea.Model, tea.Cmd) {
+	m.ExitView = m.View()
+	lines := strings.Split(ansi.Strip(m.ExitView), "\n")
+	m.ExitSnapshot = make([][]rune, len(lines))
+	// Decode display cells once; animation frames only move these cached cells.
+	for y, line := range lines {
+		for _, cell := range line {
+			width := 1
+			if cell > 127 {
+				width = ansi.StringWidth(string(cell))
+			}
+			if width == 0 {
+				continue
+			}
+			if width != 1 {
+				cell = '#'
+			}
+			m.ExitSnapshot[y] = append(m.ExitSnapshot[y], cell)
+			for range width - 1 {
+				m.ExitSnapshot[y] = append(m.ExitSnapshot[y], ' ')
+			}
+		}
+	}
+	m.State = StateExiting
+	m.ExitFrame = 0
+	m.ShowHelp = false
+	if m.ContactCancel != nil {
+		m.ContactCancel()
+		m.ContactCancel = nil
+	}
+	return m, exitTickCmd()
+}
+
+func exitTickCmd() tea.Cmd {
+	return tea.Tick(exitFrameInterval, func(t time.Time) tea.Msg { return exitTickMsg(t) })
 }

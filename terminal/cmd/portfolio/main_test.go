@@ -92,7 +92,11 @@ func TestPublicSSHIsOnlyATUI(t *testing.T) {
 	case <-time.After(3 * time.Second):
 		t.Fatal("TUI did not produce output")
 	}
-	go io.Copy(io.Discard, output)
+	exitOutput := make(chan string, 1)
+	go func() {
+		b, _ := io.ReadAll(output)
+		exitOutput <- string(b)
+	}()
 	input.Write([]byte("q"))
 	quit := make(chan error, 1)
 	go func() { quit <- session.Wait() }()
@@ -101,8 +105,16 @@ func TestPublicSSHIsOnlyATUI(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-	case <-time.After(3 * time.Second):
+	case <-time.After(5 * time.Second):
 		t.Fatal("q did not quit")
+	}
+	select {
+	case text := <-exitOutput:
+		if !strings.Contains(text, "DISCONNECTING") || !strings.Contains(text, "SIGNAL LOST") || !strings.Contains(text, "\x1b[?1049l") || !strings.Contains(text, "\x1b[?25h") {
+			t.Fatal("SSH exit did not render the animation and restore the terminal")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("SSH output did not close")
 	}
 	// A second server with the same persisted key must keep its identity.
 	restarted, err := newServer("127.0.0.1:0", key)
@@ -149,7 +161,7 @@ func awaitSessionExit(t *testing.T, finished <-chan struct{}) {
 	t.Helper()
 	select {
 	case <-finished:
-	case <-time.After(3 * time.Second):
+	case <-time.After(5 * time.Second):
 		t.Fatal("session handler did not release its resources")
 	}
 }
@@ -225,56 +237,67 @@ type roundTripFunc func(*http.Request) (*http.Response, error)
 func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
 
 func TestClosingSSHSessionCancelsEmail(t *testing.T) {
-	t.Setenv("RESEND_API_KEY", "test-key")
-	t.Setenv("RESEND_FROM", "portfolio@example.test")
-	t.Setenv("RESEND_TO", "owner@example.test")
-	started, stopped := make(chan context.Context, 1), make(chan struct{})
-	originalTransport := http.DefaultTransport
-	http.DefaultTransport = roundTripFunc(func(request *http.Request) (*http.Response, error) {
-		started <- request.Context()
-		<-request.Context().Done()
-		close(stopped)
-		return nil, request.Context().Err()
-	})
-	t.Cleanup(func() { http.DefaultTransport = originalTransport })
-	client, finished, _ := startSSHTestServer(t)
-	session, err := client.NewSession()
-	if err != nil {
-		t.Fatal(err)
+	for _, action := range []string{"channel close", "Ctrl+C"} {
+		t.Run(action, func(t *testing.T) {
+			t.Setenv("RESEND_API_KEY", "test-key")
+			t.Setenv("RESEND_FROM", "portfolio@example.test")
+			t.Setenv("RESEND_TO", "owner@example.test")
+			started, stopped := make(chan context.Context, 1), make(chan struct{})
+			originalTransport := http.DefaultTransport
+			http.DefaultTransport = roundTripFunc(func(request *http.Request) (*http.Response, error) {
+				started <- request.Context()
+				<-request.Context().Done()
+				close(stopped)
+				return nil, request.Context().Err()
+			})
+			t.Cleanup(func() { http.DefaultTransport = originalTransport })
+			client, finished, _ := startSSHTestServer(t)
+			session, err := client.NewSession()
+			if err != nil {
+				t.Fatal(err)
+			}
+			session.Stdout, session.Stderr = io.Discard, io.Discard
+			input, err := session.StdinPipe()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := session.RequestPty("xterm", 24, 80, gossh.TerminalModes{}); err != nil {
+				t.Fatal(err)
+			}
+			if err := session.Shell(); err != nil {
+				t.Fatal(err)
+			}
+			// Skip boot; move three sections right; open contact and submit dummy data.
+			_, err = io.WriteString(input, "\r\x1b[C\x1b[C\x1b[C\rTester\tvisitor@example.test\tHello\r")
+			if err != nil {
+				t.Fatal(err)
+			}
+			select {
+			case <-started:
+			case <-time.After(3 * time.Second):
+				t.Fatal("contact request did not start")
+			}
+			if action == "Ctrl+C" {
+				if _, err := io.WriteString(input, "\x03"); err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				_ = session.Close() // Deliberately retain the multiplexed SSH transport.
+			}
+			select {
+			case <-stopped:
+			case <-time.After(500 * time.Millisecond):
+				t.Fatal("exit did not cancel email before the animation finished")
+			}
+			awaitSessionExit(t, finished)
+			probe, err := client.NewSession()
+			if err != nil {
+				t.Fatalf("transport closed with session: %v", err)
+			}
+			_ = probe.Close()
+
+		})
 	}
-	session.Stdout, session.Stderr = io.Discard, io.Discard
-	input, err := session.StdinPipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := session.RequestPty("xterm", 24, 80, gossh.TerminalModes{}); err != nil {
-		t.Fatal(err)
-	}
-	if err := session.Shell(); err != nil {
-		t.Fatal(err)
-	}
-	// Skip boot; move three sections right; open contact and submit dummy data.
-	_, err = io.WriteString(input, "\r\x1b[C\x1b[C\x1b[C\rTester\tvisitor@example.test\tHello\r")
-	if err != nil {
-		t.Fatal(err)
-	}
-	select {
-	case <-started:
-	case <-time.After(3 * time.Second):
-		t.Fatal("contact request did not start")
-	}
-	_ = session.Close() // Deliberately retain the multiplexed SSH transport.
-	select {
-	case <-stopped:
-	case <-time.After(time.Second):
-		t.Fatal("email outlived its SSH session")
-	}
-	awaitSessionExit(t, finished)
-	probe, err := client.NewSession()
-	if err != nil {
-		t.Fatalf("transport closed with session: %v", err)
-	}
-	_ = probe.Close()
 }
 
 func TestInteractiveExecRunsOnlyPortfolio(t *testing.T) {
@@ -329,7 +352,7 @@ func TestInteractiveExecRunsOnlyPortfolio(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-	case <-time.After(3 * time.Second):
+	case <-time.After(5 * time.Second):
 		t.Fatal("exec TUI did not close")
 	}
 }
