@@ -10,13 +10,33 @@ import (
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		// SSH may coalesce quick key presses into one rune event. Form text and
+		// bracketed paste retain their existing input behavior.
+		if m.State == StateMain && msg.Type == tea.KeyRunes && !msg.Paste && len(msg.Runes) > 1 {
+			var commands []tea.Cmd
+			for _, key := range msg.Runes {
+				updated, cmd := m.handleKey(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{key}})
+				m = updated.(Model)
+				commands = append(commands, cmd)
+			}
+			return m, tea.Batch(commands...)
+		}
 		return m.handleKey(msg)
+	case tea.MouseMsg:
+		if m.State == StateMain && !m.ShowHelp && m.ActiveTab() == "projects" && msg.Action == tea.MouseActionPress {
+			if msg.Button == tea.MouseButtonWheelDown && m.Viewport.AtBottom() {
+				return m.handleKey(tea.KeyMsg{Type: tea.KeyDown})
+			}
+			if msg.Button == tea.MouseButtonWheelUp && m.Viewport.AtTop() {
+				return m.handleKey(tea.KeyMsg{Type: tea.KeyUp})
+			}
+		}
 
 	case tea.WindowSizeMsg:
 		m.Width = clamp(msg.Width, 1, 500)
 		m.Height = clamp(msg.Height, 1, 200)
 		m.resizeContactInputs()
-		m.refreshViewport(true)
+		m.refreshViewport(false)
 		return m, nil
 
 	case sendingTickMsg:
@@ -51,7 +71,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	// Also update viewport messages for scrolling in main state
-	if m.State == StateMain {
+	if m.State == StateMain && !m.ShowHelp {
 		var cmd tea.Cmd
 		m.Viewport, cmd = m.Viewport.Update(msg)
 		return m, cmd
@@ -101,6 +121,16 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	}
 
 	// Main navigation
+	if m.ShowHelp {
+		switch msg.String() {
+		case "?", "esc":
+			m.ShowHelp = false
+		case "q", "ctrl+c":
+			return m, tea.Quit
+		}
+		return m, nil
+	}
+
 	switch msg.String() {
 	case "q", "ctrl+c":
 		return m, tea.Quit
@@ -108,21 +138,15 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "?":
 		m.ShowHelp = !m.ShowHelp
 
-	case "up", "k":
+	case "p":
 		if m.ActiveTab() == "projects" && m.ProjectIndex > 0 {
 			m.ProjectIndex--
 			m.refreshViewport(true)
-		} else if m.MenuIndex > 0 {
-			m.MenuIndex--
-			m.refreshViewport(true)
 		}
 
-	case "down", "j":
+	case "n":
 		if m.ActiveTab() == "projects" && m.ProjectIndex < len(m.Projects)-1 {
 			m.ProjectIndex++
-			m.refreshViewport(true)
-		} else if m.MenuIndex < 4 {
-			m.MenuIndex++
 			m.refreshViewport(true)
 		}
 
@@ -154,7 +178,29 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.refreshViewport(true)
 		}
 
-	case "pgup", "pgdown", "home", "end", "ctrl+u", "ctrl+d":
+	case "home":
+		m.Viewport.GotoTop()
+	case "end":
+		m.Viewport.GotoBottom()
+	case "up", "down", "j", "k":
+		if m.ActiveTab() == "projects" {
+			forward := msg.String() == "down" || msg.String() == "j"
+			if forward && m.Viewport.AtBottom() && m.ProjectIndex < len(m.Projects)-1 {
+				m.ProjectIndex++
+				m.refreshViewport(true)
+				return m, nil
+			}
+			if !forward && m.Viewport.AtTop() && m.ProjectIndex > 0 {
+				m.ProjectIndex--
+				m.refreshViewport(true)
+				m.Viewport.GotoBottom()
+				return m, nil
+			}
+		}
+		var cmd tea.Cmd
+		m.Viewport, cmd = m.Viewport.Update(msg)
+		return m, cmd
+	case "pgup", "pgdown", "ctrl+u", "ctrl+d":
 		var cmd tea.Cmd
 		m.Viewport, cmd = m.Viewport.Update(msg)
 		return m, cmd
@@ -254,8 +300,6 @@ func (m Model) handleTick() (tea.Model, tea.Cmd) {
 		}
 		return m, tickCmd()
 
-	case StateMain:
-		return m, tickCmd()
 	}
 
 	return m, nil

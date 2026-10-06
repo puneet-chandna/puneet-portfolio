@@ -122,7 +122,8 @@ Contact routing: **Terminal → Resend** (optional), **Web → Web3Forms**.
 ║                                                                              ║
 ║   [ABOUT ME]      [PROJECTS]      [CONTACT]                                  ║
 ║                                                                              ║
-║   > Navigate with j/k or arrow keys                                          ║
+║   > Switch sections with h/l or left/right arrows                            ║
+║   > Scroll content with j/k, up/down arrows or the mouse wheel                ║
 ║   > Press ENTER to select                                                    ║
 ║   > Press ? for help                                                         ║
 ║                                                                              ║
@@ -140,6 +141,27 @@ Contact routing: **Terminal → Resend** (optional), **Web → Web3Forms**.
 | `📨 Contact Form`  | Optional Resend integration with delivery feedback        |
 | `🎨 Tron Theme`    | Cyan glow, electric blue, deep void black                 |
 | `⌨️ Vim Bindings`  | j/k navigation because we're not savages                  |
+
+The terminal keeps its Tron theme and follows the curated content in `web/src/data/portfolio.js`: GEX, Lattora, Requests Native, ASCII Video Insanity, Emotion-Aware Movie Recommender, Crop Stress Detection Model and Water Brakes. It also includes Terminal Portfolio as a project in the TUI. About and Experience include the current Hyr.works role, with team contributions distinguished from the independently delivered interview assessment product.
+
+| Keys | Action |
+| ---- | ------ |
+| `↑↓` / `j/k` | Scroll content; in Projects, browse the next/previous project at the scroll ends |
+| Mouse wheel | Scroll content; in Projects, browse projects at the scroll ends |
+| `←→` / `h/l` | Change section directly, including leaving Projects |
+| `n/p` | Next/previous project while in Projects |
+| `PgUp/PgDn` / `Ctrl+U/D` | Scroll the current content |
+| `Home/End` | Jump to the top or bottom of the current content |
+| `?` | Open or close help; `Esc` also closes help |
+| `Enter` | Open the configured contact form or confirm Exit |
+| `Tab/Shift+Tab` | Next/previous contact field; `Esc` returns without clearing the draft |
+| `q` / `Ctrl+C` | Disconnect from the main screen; `Ctrl+C` also disconnects while editing or sending |
+
+An orange hint below the content shows whether there is more above or below. Narrow terminals hide the inspector and, below 60 columns, the menu to give the content room. The header still shows the active section; use `h/l` to switch sections and `?` for controls. Resizing preserves the scroll offset within the current content.
+
+Use `ssh puneet.space` in an interactive terminal. PTY shell requests and terminal-wrapper exec requests both open the portfolio; supplied bootstrap commands are ignored and never executed. Remote shell commands, file transfer and forwarding remain unavailable. If a terminal's own integration still interferes, `command ssh -tt puneet.space` bypasses shell wrappers.
+
+Terminal messages use Resend. `RESEND_FROM` must use a domain that is **verified**, not merely added, in the same Resend account as `RESEND_API_KEY`. Permanent provider rejections preserve the draft and show a direct email alternative; the server logs the HTTP status and a safe reason without visitor content or credentials.
 
 ### Run Locally
 

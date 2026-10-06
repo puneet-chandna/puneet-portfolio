@@ -141,6 +141,10 @@ func (m Model) ActiveTab() string {
 
 func (m Model) GetHeader() string {
 	tab := "/" + m.ActiveTab()
+	if m.Width < 60 {
+		return m.Styles.Header.Width(max(0, m.Width-m.Styles.Header.GetHorizontalBorderSize())).
+			Render("PUNEET-OS " + m.Styles.Dim.Render(tab))
+	}
 	title := m.Styles.Title.MarginBottom(0).Render("PUNEET-OS v1.0")
 
 	left := title
@@ -172,10 +176,13 @@ func (m Model) GetFooter() string {
 	case StateContactForm:
 		controls = m.Styles.Dim.Render("[Tab] Next field  [Enter] Send  [Esc] Back")
 	case StateMain:
-		if m.ShowHelp {
-			controls = m.Styles.Dim.Render("[?] Help  [↑↓/jk] Select  [PgUp/PgDn] Scroll  [q] Exit")
-		} else {
-			controls = m.Styles.Dim.Render("[?] Help  [↑↓/jk] Select  [PgUp/PgDn] Scroll  [q] Exit")
+		switch {
+		case m.Width < 60:
+			controls = m.Styles.Dim.Render("[?] Help [h/l] Tabs [q] Exit")
+		case m.Width < 90:
+			controls = m.Styles.Dim.Render("[?] Help [↑↓/jk] Scroll [h/l] Tabs [q] Exit")
+		default:
+			controls = m.Styles.Dim.Render("[?] Help [↑↓/jk] Scroll [h/l] Tabs [PgUp/PgDn] Page [q] Exit")
 		}
 	default:
 		controls = m.Styles.Dim.Render("[↑↓/jk] Navigate  [Enter] Select  [q] Exit")

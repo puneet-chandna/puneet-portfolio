@@ -160,8 +160,13 @@ func servePortfolio(incoming gossh.NewChannel, parent context.Context) {
 				return
 			}
 			accepted := false
-			// crypto/ssh bounds packets; use a smaller cap for our few tiny requests.
-			if len(request.Payload) <= 4096 {
+			// Terminal wrappers may send a bootstrap script. Bound it and ignore it:
+			// interactive exec requests always launch this TUI, never an OS command.
+			payloadLimit := 4096
+			if request.Type == "exec" {
+				payloadLimit = 64 << 10
+			}
+			if len(request.Payload) <= payloadLimit {
 				switch request.Type {
 				case "pty-req":
 					if pty == nil && program == nil {
@@ -176,8 +181,13 @@ func servePortfolio(incoming gossh.NewChannel, parent context.Context) {
 						env.Key == "COLORTERM" && (env.Value == "truecolor" || env.Value == "24bit") {
 						colorTerm, colorSet, accepted = env.Value, true, true
 					}
-				case "shell":
-					if program == nil && pty != nil && len(request.Payload) == 0 {
+				case "shell", "exec":
+					valid := request.Type == "shell" && len(request.Payload) == 0
+					if request.Type == "exec" {
+						var command struct{ Command string }
+						valid = gossh.Unmarshal(request.Payload, &command) == nil
+					}
+					if program == nil && pty != nil && valid {
 						program = teaHandler(ctx, channel, pty.Term, colorTerm,
 							tea.WindowSizeMsg{Width: int(pty.Width), Height: int(pty.Height)})
 						done := make(chan error, 1)
@@ -235,5 +245,5 @@ func teaHandler(ctx context.Context, channel io.ReadWriter, term, colorTerm stri
 	m.Context = ctx
 	sized, _ := m.Update(window)
 	return tea.NewProgram(sized, tea.WithContext(ctx), tea.WithInput(channel), tea.WithOutput(output),
-		tea.WithAltScreen(), tea.WithoutSignalHandler())
+		tea.WithAltScreen(), tea.WithMouseCellMotion(), tea.WithoutSignalHandler())
 }

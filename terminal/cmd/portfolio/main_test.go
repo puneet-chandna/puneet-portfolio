@@ -86,6 +86,9 @@ func TestPublicSSHIsOnlyATUI(t *testing.T) {
 		if !strings.Contains(first, "38;5;") {
 			t.Fatal("SSH terminal lost its256-color theme")
 		}
+		if !strings.Contains(first, "\x1b[?1002h") || !strings.Contains(first, "\x1b[?1006h") {
+			t.Fatal("SSH session did not enable terminal mouse-wheel reporting")
+		}
 	case <-time.After(3 * time.Second):
 		t.Fatal("TUI did not produce output")
 	}
@@ -272,4 +275,61 @@ func TestClosingSSHSessionCancelsEmail(t *testing.T) {
 		t.Fatalf("transport closed with session: %v", err)
 	}
 	_ = probe.Close()
+}
+
+func TestInteractiveExecRunsOnlyPortfolio(t *testing.T) {
+	client, _, _ := startSSHTestServer(t)
+	session, err := client.NewSession()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer session.Close()
+	if err := session.RequestPty("xterm-ghostty", 24, 80, gossh.TerminalModes{}); err != nil {
+		t.Fatal(err)
+	}
+	output, err := session.StdoutPipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	input, err := session.StdinPipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := session.Start(strings.Repeat("# terminal bootstrap\n", 400) + "echo BOOTSTRAP_WAS_EXECUTED"); err != nil {
+		t.Fatalf("interactive exec rejected: %v", err)
+	}
+	io.WriteString(input, "\r") // Skip boot so the check is independent of animation timing.
+	rendered := make(chan string, 1)
+	go func() {
+		var b strings.Builder
+		buf := make([]byte, 8192)
+		for {
+			n, err := output.Read(buf)
+			b.Write(buf[:n])
+			if strings.Contains(b.String(), "PUNEET-OS") || err != nil {
+				rendered <- b.String()
+				return
+			}
+		}
+	}()
+	select {
+	case text := <-rendered:
+		if !strings.Contains(text, "PUNEET-OS") || strings.Contains(text, "BOOTSTRAP_WAS_EXECUTED") {
+			t.Fatalf("exec did not route to portfolio: %q", text)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("interactive exec did not render")
+	}
+	go io.Copy(io.Discard, output)
+	io.WriteString(input, "q")
+	done := make(chan error, 1)
+	go func() { done <- session.Wait() }()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("exec TUI did not close")
+	}
 }

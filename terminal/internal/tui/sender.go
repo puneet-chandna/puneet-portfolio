@@ -14,6 +14,8 @@ import (
 	"sync"
 	"time"
 	"unicode"
+
+	"github.com/charmbracelet/log"
 )
 
 const (
@@ -123,6 +125,19 @@ func SendContactForm(ctx context.Context, name, email, message string) error {
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		rollbackContactAttempt(attempt)
+		var rejection struct {
+			Message string `json:"message"`
+		}
+		_ = json.NewDecoder(io.LimitReader(resp.Body, 4096)).Decode(&rejection)
+		reason := "provider_rejection"
+		if strings.Contains(rejection.Message, "domain is not verified") {
+			reason = "sender_domain_not_verified"
+		}
+		// Log only controlled labels, never visitor content or provider response text.
+		log.Error("Contact delivery rejected by Resend", "status", resp.StatusCode, "reason", reason)
+		if resp.StatusCode >= 400 && resp.StatusCode < 500 && resp.StatusCode != http.StatusTooManyRequests {
+			return fmt.Errorf("Delivery unavailable. Email %s directly.", os.Getenv("RESEND_TO"))
+		}
 		return fmt.Errorf("email provider could not accept the message; please try again")
 	}
 	if _, err := io.Copy(io.Discard, io.LimitReader(resp.Body, 1<<20)); err != nil {

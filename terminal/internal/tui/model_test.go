@@ -42,6 +42,165 @@ func TestProjectsFitAndPageDownScrolls(t *testing.T) {
 	}
 }
 
+func TestScrollingReadsCurrentSectionWithoutSkippingExperience(t *testing.T) {
+	for _, tab := range []int{0, 1, 2} {
+		m := NewModel()
+		m.State = StateMain
+		m.MenuIndex = tab
+		m = updateModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 24})
+		m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyDown})
+		if m.MenuIndex != tab || m.ProjectIndex != 0 || m.Viewport.YOffset != 1 {
+			t.Fatalf("down changed section or project instead of scrolling tab %d", tab)
+		}
+		m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}})
+		if m.MenuIndex != tab || m.ProjectIndex != 0 || m.Viewport.YOffset != 2 {
+			t.Fatalf("j did not scroll tab %d", tab)
+		}
+		m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyUp})
+		if m.Viewport.YOffset != 1 {
+			t.Fatal("up did not scroll back")
+		}
+		m = updateModel(t, m, tea.MouseMsg{Action: tea.MouseActionPress, Button: tea.MouseButtonWheelDown})
+		if m.MenuIndex != tab || m.ProjectIndex != 0 || m.Viewport.YOffset <= 1 {
+			t.Fatal("mouse wheel did not scroll the current content")
+		}
+	}
+	m := NewModel()
+	m.State = StateMain
+	m = updateModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 24})
+	m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyRight})
+	if m.ActiveTab() != "experience" {
+		t.Fatal("right skipped Experience")
+	}
+	m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyRight})
+	m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'n'}})
+	if m.ProjectIndex != 1 || m.ActiveTab() != "projects" {
+		t.Fatal("n did not select the next project")
+	}
+	m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'p'}})
+	if m.ProjectIndex != 0 {
+		t.Fatal("p did not select the previous project")
+	}
+}
+
+func TestOverflowIsVisibleAndEverySectionCanBeRead(t *testing.T) {
+	for _, size := range [][2]int{{32, 15}, {40, 15}, {80, 24}, {160, 45}} {
+		for _, tab := range []int{0, 1} {
+			m := NewModel()
+			m.State = StateMain
+			m.MenuIndex = tab
+			m = updateModel(t, m, tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+			if !strings.Contains(m.View(), "More below") || !strings.Contains(m.View(), "↑↓") {
+				t.Fatalf("%dx%d tab %d did not explain hidden content", size[0], size[1], tab)
+			}
+			var read strings.Builder
+			for !m.Viewport.AtBottom() {
+				read.WriteString(m.Viewport.View())
+				m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyPgDown})
+			}
+			read.WriteString(m.Viewport.View())
+			if !strings.Contains(m.View(), "More above") || strings.Contains(m.View(), "More below") {
+				t.Fatal("bottom of content has an incorrect overflow hint")
+			}
+			last := "elegant."
+			if tab == 1 {
+				last = "validation"
+			}
+			if !strings.Contains(read.String(), last) {
+				t.Fatalf("could not read the end of tab %d at %dx%d", tab, size[0], size[1])
+			}
+			view := m.View()
+			if lipgloss.Width(view) > size[0] || lipgloss.Height(view) > size[1] || !strings.Contains(view, "[q] Exit") {
+				t.Fatalf("scrolling broke the %dx%d layout", size[0], size[1])
+			}
+		}
+	}
+}
+
+func TestHelpDoesNotNavigateBehindOverlay(t *testing.T) {
+	m := NewModel()
+	m.State = StateMain
+	m.MenuIndex = 2
+	m = updateModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 24})
+	m.ShowHelp = true
+	for _, key := range []tea.KeyType{tea.KeyDown, tea.KeyRight, tea.KeyPgDown, tea.KeyEnter} {
+		m = updateModel(t, m, tea.KeyMsg{Type: key})
+		if m.MenuIndex != 2 || m.ProjectIndex != 0 || m.Viewport.YOffset != 0 || m.State != StateMain {
+			t.Fatal("help allowed navigation behind the overlay")
+		}
+	}
+	m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyEsc})
+	if m.ShowHelp {
+		t.Fatal("Esc did not close help")
+	}
+}
+
+func TestResizeKeepsReadingPositionAndClampsAtBottom(t *testing.T) {
+	m := NewModel()
+	m.State = StateMain
+	m.Experience = strings.Repeat("readable work history\n", 50)
+	m.MenuIndex = 1
+	m = updateModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 24})
+	m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyPgDown})
+	offset := m.Viewport.YOffset
+	m = updateModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 20})
+	if m.Viewport.YOffset != offset {
+		t.Fatal("resize jumped to the top of the work history")
+	}
+	m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyEnd})
+	if !m.Viewport.AtBottom() {
+		t.Fatal("End did not scroll to the bottom")
+	}
+	m = updateModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 40})
+	if !m.Viewport.AtBottom() || m.Viewport.PastBottom() {
+		t.Fatal("growing the terminal did not clamp the reading position")
+	}
+	m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyHome})
+	if !m.Viewport.AtTop() {
+		t.Fatal("Home did not scroll to the top")
+	}
+}
+
+func TestIdleMainDoesNotScheduleAnimation(t *testing.T) {
+	m := NewModel()
+	m.State = StateMain
+	_, cmd := m.Update(tickMsg(time.Now()))
+	if cmd != nil {
+		t.Fatal("idle main screen scheduled another animation tick")
+	}
+}
+
+func TestNarrowMainKeepsSectionAndExitVisible(t *testing.T) {
+	for _, width := range []int{32, 40, 60} {
+		m := NewModel()
+		m.State = StateMain
+		m.MenuIndex = 2
+		m = updateModel(t, m, tea.WindowSizeMsg{Width: width, Height: 15})
+		view := m.View()
+		for _, text := range []string{"/projects", "[?] Help", "[q] Exit"} {
+			if !strings.Contains(view, text) {
+				t.Fatalf("%d-column view hides %q:\n%s", width, text, view)
+			}
+		}
+		if lipgloss.Width(m.GetHeader()) > width || lipgloss.Width(m.GetFooter()) > width {
+			t.Fatalf("header or footer wraps beyond %d columns", width)
+		}
+	}
+}
+
+func TestNarrowBootKeepsIdentityAndProgressVisible(t *testing.T) {
+	m := NewModel()
+	m = updateModel(t, m, tea.WindowSizeMsg{Width: 32, Height: 15})
+	if !strings.Contains(m.View(), "PUNEET-OS") {
+		t.Fatal("narrow boot screen clipped its identity")
+	}
+	m.State = StateLoading
+	m.BootProgress = 100
+	if !strings.Contains(m.View(), "100%") {
+		t.Fatal("narrow loading screen clipped its progress")
+	}
+}
+
 func TestSelectedProjectDetailsAreVisibleAt80Columns(t *testing.T) {
 	m := NewModel()
 	m.State = StateMain
@@ -73,6 +232,41 @@ func TestContactReopensWithFirstInputFocused(t *testing.T) {
 	m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyEnter})
 	if m.ContactFocus != 0 || !m.ContactInputs[0].Focused() {
 		t.Fatal("contact form reopened on the wrong input")
+	}
+}
+
+func TestContactAvailabilityIsVisibleBeforeScrolling(t *testing.T) {
+	for _, configured := range []bool{false, true} {
+		value := ""
+		if configured {
+			value = "configured"
+		}
+		t.Setenv("RESEND_API_KEY", value)
+		t.Setenv("RESEND_FROM", value)
+		t.Setenv("RESEND_TO", value)
+		m := NewModel()
+		m.State = StateMain
+		m.MenuIndex = 3
+		m = updateModel(t, m, tea.WindowSizeMsg{Width: 40, Height: 15})
+		want := "Message form"
+		if configured {
+			want = "Press [Enter]"
+		}
+		if !strings.Contains(m.View(), want) {
+			t.Fatal("contact page hid form availability below the fold")
+		}
+	}
+}
+
+func TestSmallContactSuccessKeepsReturnInstructionVisible(t *testing.T) {
+	m := NewModel()
+	m.State = StateContactSent
+	m = updateModel(t, m, tea.WindowSizeMsg{Width: 32, Height: 15})
+	view := m.View()
+	for _, text := range []string{"TRANSMISSION COMPLETE", "email provider.", "Press any key"} {
+		if !strings.Contains(view, text) {
+			t.Fatalf("small delivery confirmation hides %q", text)
+		}
 	}
 }
 
@@ -400,5 +594,69 @@ func TestOriginalThemeSurvivesDataAndDeliveryFixes(t *testing.T) {
 	_, cmd := m.Update(sendingTickMsg(time.Now()))
 	if cmd != nil {
 		t.Fatal("animation continued after provider result")
+	}
+}
+
+func TestProjectArrowsBrowseAtScrollBoundaries(t *testing.T) {
+	for _, size := range []tea.WindowSizeMsg{{Width: 160, Height: 50}, {Width: 80, Height: 24}} {
+		m := NewModel()
+		m.State = StateMain
+		m.MenuIndex = 2
+		m = updateModel(t, m, size)
+		m.Viewport.GotoBottom()
+		m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyDown})
+		if m.ProjectIndex != 1 || m.ActiveTab() != "projects" || !m.Viewport.AtTop() {
+			t.Fatalf("down at bottom did not open next project at %dx%d", size.Width, size.Height)
+		}
+		if !strings.Contains(m.View(), "SELECTED: Lattora") {
+			t.Fatal("new project not visible")
+		}
+		m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'k'}})
+		if m.ProjectIndex != 0 || !m.Viewport.AtBottom() {
+			t.Fatal("k at top did not return to previous project")
+		}
+		m = updateModel(t, m, tea.MouseMsg{Action: tea.MouseActionPress, Button: tea.MouseButtonWheelDown})
+		if m.ProjectIndex != 1 || !m.Viewport.AtTop() {
+			t.Fatal("wheel at bottom did not open next project")
+		}
+		m = updateModel(t, m, tea.MouseMsg{Action: tea.MouseActionPress, Button: tea.MouseButtonWheelUp})
+		if m.ProjectIndex != 0 || !m.Viewport.AtBottom() {
+			t.Fatal("wheel at top did not return to previous project")
+		}
+	}
+}
+
+func TestPermanentProviderFailureOffersDirectEmail(t *testing.T) {
+	t.Setenv("RESEND_API_KEY", "test-key")
+	t.Setenv("RESEND_FROM", "Portfolio <from@example.com>")
+	t.Setenv("RESEND_TO", "owner@example.com")
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+		io.WriteString(w, `{"name":"validation_error","message":"The example.com domain is not verified"}`)
+	}))
+	defer server.Close()
+	old := resendEndpoint
+	resendEndpoint = server.URL
+	t.Cleanup(func() { resendEndpoint = old })
+	resetContactLimit()
+	err := SendContactForm(context.Background(), "Visitor", "visitor@example.com", "Hello")
+	if err == nil || !strings.Contains(err.Error(), "owner@example.com") || strings.Contains(err.Error(), "try again") {
+		t.Fatalf("permanent provider rejection = %v", err)
+	}
+}
+
+func TestSSHCoalescedNavigationKeysAreNotDropped(t *testing.T) {
+	m := NewModel()
+	m.State = StateMain
+	m = updateModel(t, m, tea.WindowSizeMsg{Width: 80, Height: 24})
+	m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("llj")})
+	if m.ActiveTab() != "projects" || m.Viewport.YOffset != 1 {
+		t.Fatal("coalesced navigation keys were dropped")
+	}
+	m.State = StateContactForm
+	m.focusContact(0)
+	m = updateModel(t, m, tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("hello")})
+	if m.ContactInputs[0].Value() != "hello" {
+		t.Fatal("contact text was treated as navigation")
 	}
 }

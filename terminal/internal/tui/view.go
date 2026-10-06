@@ -40,6 +40,10 @@ func (m Model) renderBoot() string {
 	// Use a style without MarginBottom for ASCII art so lines are adjacent
 	asciiStyle := m.Styles.Title.MarginBottom(0)
 	asciiTitle := asciiStyle.Render("█▀█ █░█ █▄░█ █▀▀ █▀▀ ▀█▀ ▄▄ █▀█ █▀\n█▀▀ █▄█ █░▀█ ██▄ ██▄ ░█░ ░░ █▄█ ▄█")
+	if m.Width < 50 {
+		asciiTitle = asciiStyle.Render("PUNEET-OS")
+		text = m.Styles.Dim.Render(" Connecting to mainframe...")
+	}
 
 	content := lipgloss.JoinVertical(lipgloss.Center,
 		"",
@@ -54,7 +58,7 @@ func (m Model) renderBoot() string {
 }
 
 func (m Model) renderLoading() string {
-	barWidth := 40
+	barWidth := min(40, max(1, m.Width-9))
 	filled := (m.BootProgress * barWidth) / 100
 	empty := barWidth - filled
 
@@ -165,6 +169,16 @@ func (m Model) renderContactSending() string {
 }
 
 func (m Model) renderContactSent() string {
+	if m.Width < 50 || m.Height < 20 {
+		content := lipgloss.JoinVertical(lipgloss.Center,
+			m.Styles.BootAccessGranted.Padding(1, 1).Render("✓ TRANSMISSION COMPLETE"),
+			"",
+			m.Styles.Dim.Width(max(1, m.Width-2)).Render("Accepted for delivery by the email provider."),
+			"",
+			m.Styles.Subtitle.Render("Press any key to continue..."),
+		)
+		return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, content)
+	}
 	content := lipgloss.JoinVertical(lipgloss.Center,
 		"",
 		"",
@@ -211,9 +225,6 @@ func (m Model) renderMain() string {
 func (m Model) paneLayout() (menuWidth, inspectorWidth, viewportWidth, contentHeight int) {
 	menuWidth = 22
 	if m.Width < 60 {
-		menuWidth = 16
-	}
-	if m.Width < 38 {
 		menuWidth = 0
 	}
 	contentHeight = m.Height - lipgloss.Height(m.GetHeader()) - lipgloss.Height(m.GetFooter())
@@ -235,11 +246,13 @@ func (m *Model) refreshViewport(reset bool) {
 	frameWidth := m.Styles.Viewport.GetHorizontalFrameSize()
 	frameHeight := m.Styles.Viewport.GetVerticalFrameSize()
 	m.Viewport.Width = max(1, width-frameWidth)
-	m.Viewport.Height = max(1, height-frameHeight)
+	m.Viewport.Height = max(1, height-frameHeight-1)
 	m.Viewport.SetContent(lipgloss.NewStyle().Width(m.Viewport.Width).Render(m.viewportContent()))
 	m.viewportTab = m.ActiveTab()
 	if reset {
 		m.Viewport.GotoTop()
+	} else {
+		m.Viewport.SetYOffset(m.Viewport.YOffset)
 	}
 }
 
@@ -260,14 +273,16 @@ func (m Model) viewportContent() string {
 }
 
 func (m Model) renderHelpOverlay() string {
-	if m.Width < 60 || m.Height < 28 {
+	if m.Width < 60 || m.Height < 32 {
 		help := lipgloss.JoinVertical(lipgloss.Left,
 			m.Styles.Title.MarginBottom(0).Render("HELP"),
-			m.Styles.Dim.Render("↑↓/jk navigate or select"),
+			m.Styles.Dim.Render("↑↓/jk scroll content"),
 			m.Styles.Dim.Render("h/l change section"),
+			m.Styles.Dim.Render("↑↓/jk also browse projects"),
+			m.Styles.Dim.Render("n/p select project"),
 			m.Styles.Dim.Render("PgUp/PgDn scroll"),
 			m.Styles.Dim.Render("Enter select/send"),
-			m.Styles.Dim.Render("? Close  q Exit"),
+			m.Styles.Dim.Render("? Close  Esc Close  q Exit"),
 		)
 		box := lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(ColorPrimary).Padding(0, 1).Background(ColorBg)
 		return lipgloss.Place(m.Width, m.Height, lipgloss.Center, lipgloss.Center, box.Render(help))
@@ -276,24 +291,28 @@ func (m Model) renderHelpOverlay() string {
 		m.Styles.Title.Render("╔═══ KEYBOARD SHORTCUTS ═══╗"),
 		"",
 		m.Styles.MenuActive.Render("Navigation"),
-		m.Styles.Dim.Render("  ↑/k     Menu or project"),
-		m.Styles.Dim.Render("  ↓/j     Menu or project"),
+		m.Styles.Dim.Render("  ↑↓/jk   Scroll content"),
+		m.Styles.Dim.Render("  Wheel   Scroll content"),
+		m.Styles.Dim.Render("  n/p     Next/previous project"),
+		m.Styles.Dim.Render("  ↑↓/jk   Also browse projects at scroll ends"),
 		m.Styles.Dim.Render("  ←/h     Previous section"),
 		m.Styles.Dim.Render("  →/l     Next section"),
 		m.Styles.Dim.Render("  PgUp/PgDn Scroll page"),
+		m.Styles.Dim.Render("  Ctrl+U/D Half page"),
+		m.Styles.Dim.Render("  Home/End Top/bottom"),
 		m.Styles.Dim.Render("  Enter   Select/Confirm"),
 		"",
 		m.Styles.MenuActive.Render("General"),
-		m.Styles.Dim.Render("  ?       Toggle this help"),
+		m.Styles.Dim.Render("  ?/Esc   Close this help"),
 		m.Styles.Dim.Render("  q       Disconnect"),
 		m.Styles.Dim.Render("  Ctrl+C  Force quit"),
 		"",
 		m.Styles.MenuActive.Render("Contact Form"),
-		m.Styles.Dim.Render("  Tab     Next field"),
+		m.Styles.Dim.Render("  Tab/Shift+Tab Next/previous field"),
 		m.Styles.Dim.Render("  Esc     Cancel"),
 		m.Styles.Dim.Render("  Enter   Send message"),
 		"",
-		m.Styles.Subtitle.Render("Press ? to close"),
+		m.Styles.Subtitle.Render("Press ? or Esc to close"),
 	)
 
 	boxStyle := lipgloss.NewStyle().
@@ -330,7 +349,20 @@ func (m Model) renderViewport(width, height int) string {
 		viewport.SetContent(lipgloss.NewStyle().Width(viewport.Width).Render(m.viewportContent()))
 		viewport.GotoTop()
 	}
-	return m.Styles.Viewport.Width(max(0, width-m.Styles.Viewport.GetHorizontalBorderSize())).Height(max(0, height-m.Styles.Viewport.GetVerticalBorderSize())).Render(viewport.View())
+	hint := "All content shown"
+	switch {
+	case !viewport.AtTop() && !viewport.AtBottom():
+		hint = "↑↓ More · ↑↓ scroll"
+	case !viewport.AtBottom():
+		hint = "↓ More below · ↑↓ scroll"
+	case !viewport.AtTop():
+		hint = "↑ More above · ↑↓ scroll"
+	}
+	if viewport.Width >= 50 {
+		hint += fmt.Sprintf(" | %d-%d of %d lines", viewport.YOffset+1,
+			min(viewport.YOffset+viewport.Height, viewport.TotalLineCount()), viewport.TotalLineCount())
+	}
+	return m.Styles.Viewport.Width(max(0, width-m.Styles.Viewport.GetHorizontalBorderSize())).Height(max(0, height-m.Styles.Viewport.GetVerticalBorderSize())).Render(viewport.View() + "\n" + m.Styles.AccentText.Render(hint))
 }
 
 // renderExperience renders the experience/work history section
@@ -385,6 +417,7 @@ func (m Model) renderColorizedBio() string {
 func (m Model) renderProjectList() string {
 	var lines []string
 	lines = append(lines, m.Styles.Title.Render("╔═══ PROJECT DATABASE ═══╗"))
+	lines = append(lines, m.Styles.Dim.Render("[↑↓/jk] Scroll & browse  [n/p] Select"))
 	if len(m.Projects) > 0 && m.ProjectIndex >= 0 && m.ProjectIndex < len(m.Projects) {
 		p := m.Projects[m.ProjectIndex]
 		lines = append(lines, m.Styles.MenuActive.Render("SELECTED: "+p.Name), p.Description)
@@ -415,7 +448,7 @@ func (m Model) renderProjectList() string {
 		lines = append(lines, numStyle.Render(fmt.Sprintf("%d. ", i+1))+nameStyle.Render(p.Name)+" "+statusStyle.Render(status))
 	}
 
-	lines = append(lines, "", m.Styles.Dim.Render("[↑↓/jk] Select project  [PgUp/PgDn] Scroll"))
+	lines = append(lines, "", m.Styles.Dim.Render("[↑↓/jk] Scroll & browse  [n/p] Select"))
 
 	return strings.Join(lines, "\n")
 }
@@ -428,7 +461,7 @@ func (m Model) renderContactInfo() string {
 	if m.ContactError != "" {
 		status = m.ContactError
 	}
-	return m.Styles.Title.Render("╔═══ UPLINK TERMINAL ═══╗") + `
+	return m.Styles.Title.Render("╔═══ UPLINK TERMINAL ═══╗") + "\n" + m.Styles.Dim.Render("> "+status) + `
 
 Establish communication via secure channels:
 
@@ -443,8 +476,6 @@ Establish communication via secure channels:
 
 ` + m.Styles.MenuActive.Render("WEBSITE") + `
   puneetchandna.com
-
-` + m.Styles.Dim.Render("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━\n> "+status) + `
 
 ` + m.Styles.AccentText.Render("Resume: https://puneetchandna.com/Puneet-Chandna-Resume.pdf")
 }
