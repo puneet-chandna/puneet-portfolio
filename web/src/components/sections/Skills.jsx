@@ -3,7 +3,7 @@ import { skills } from '../../data/portfolio'
 
 export default function Skills() {
   return (
-    <section className="section" id="skills">
+    <section className="section" id="skills" tabIndex="-1">
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -27,8 +27,8 @@ export default function Skills() {
                 transition: { duration: 0.1 }
               }}
             >
-              <skill.icon className="icon" style={{ color: skill.color }} />
-              <span style={{ color: skill.color }}>{skill.name}</span>
+              <skill.icon aria-hidden="true" className="icon" style={{ color: skill.color }} />
+              <span>{skill.name}</span>
             </motion.div>
           ))}
         </div>

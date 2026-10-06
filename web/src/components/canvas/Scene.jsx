@@ -39,10 +39,10 @@ function CameraController() {
   return null
 }
 
-export default function Scene() {
+export default function Scene({ staticBackground = false }) {
   return (
-    <div className="canvas-container">
-      <Canvas>
+    <div className="canvas-container" aria-hidden="true">
+      <Canvas frameloop={staticBackground ? 'demand' : 'always'} dpr={staticBackground ? 1 : [1, 2]}>
         <PerspectiveCamera makeDefault position={[0, 5, 20]} fov={60} />
         <color attach="background" args={['#050505']} />
         <fog attach="fog" args={['#050505', 20, 60]} />
@@ -51,12 +51,12 @@ export default function Scene() {
         <pointLight position={[10, 10, 10]} intensity={0.5} color="#ffffff" />
         
         <Suspense fallback={null}>
-          <ParticleField count={1500} />
-          <TronGrid size={80} divisions={40} />
-          <GlowingOrbs count={6} />
+          <ParticleField count={1500} animated={!staticBackground} />
+          <TronGrid size={80} divisions={40} animated={!staticBackground} />
+          <GlowingOrbs count={6} animated={!staticBackground} />
         </Suspense>
 
-        <CameraController />
+        {!staticBackground && <CameraController />}
 
         <EffectComposer>
           <Bloom

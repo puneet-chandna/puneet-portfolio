@@ -3,7 +3,7 @@ import { projects } from '../../data/portfolio'
 
 export default function Projects() {
   return (
-    <section className="section" id="projects">
+    <section className="section" id="projects" tabIndex="-1">
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -14,7 +14,7 @@ export default function Projects() {
         
         <div className="grid-3">
           {projects.map((project, index) => (
-            <motion.div
+            <motion.article
               key={project.id}
               className="card project-card"
               initial={{ opacity: 0, y: 30 }}
@@ -28,6 +28,8 @@ export default function Projects() {
                   src={project.image} 
                   alt={project.name}
                   style={{ objectFit: project.imageFit }}
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
               <div style={{ padding: '20px' }}>
@@ -41,6 +43,7 @@ export default function Projects() {
                 {project.url && (
                   <a
                     href={project.url}
+                    aria-label={`View ${project.name}${project.url.includes('github.com') ? ' on GitHub' : ' live app'}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn btn-outline"
@@ -50,7 +53,7 @@ export default function Projects() {
                   </a>
                 )}
               </div>
-            </motion.div>
+            </motion.article>
           ))}
         </div>
       </motion.div>

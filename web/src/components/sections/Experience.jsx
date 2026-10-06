@@ -3,7 +3,7 @@ import { experience } from '../../data/portfolio'
 
 export default function Experience() {
   return (
-    <section className="section" id="experience">
+    <section className="section" id="experience" tabIndex="-1">
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -25,7 +25,9 @@ export default function Experience() {
               <div className="timeline-date">{exp.date}</div>
               <h3 className="timeline-title">{exp.title}</h3>
               <div className="timeline-company">{exp.company}</div>
-              <p className="timeline-desc">{exp.description}</p>
+              {exp.description.split('\n\n').map(paragraph => (
+                <p key={paragraph} className="timeline-desc">{paragraph}</p>
+              ))}
             </motion.div>
           ))}
         </div>

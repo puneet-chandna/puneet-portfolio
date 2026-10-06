@@ -2,7 +2,7 @@ import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
-export default function TronGrid({ size = 100, divisions = 50 }) {
+export default function TronGrid({ size = 100, divisions = 50, animated = true }) {
   const linesRef = useRef()
 
   const linePositions = useMemo(() => {
@@ -26,7 +26,7 @@ export default function TronGrid({ size = 100, divisions = 50 }) {
   }, [size, divisions])
 
   useFrame((state) => {
-    if (linesRef.current) {
+    if (animated && linesRef.current) {
       // Pulse effect
       const pulse = Math.sin(state.clock.elapsedTime * 2) * 0.1 + 0.9
       linesRef.current.material.opacity = 0.3 * pulse

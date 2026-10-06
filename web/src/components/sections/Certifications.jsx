@@ -6,7 +6,7 @@ export default function Certifications() {
   const marqueeItems = [...courseCerts, ...courseCerts]
 
   return (
-    <section className="section" id="certifications">
+    <section className="section" id="certifications" tabIndex="-1">
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -32,6 +32,8 @@ export default function Certifications() {
               <img
                 src={featuredCert.badge}
                 alt={featuredCert.name}
+                loading="lazy"
+                decoding="async"
                 className="cert-badge-img"
               />
             </div>
@@ -58,6 +60,7 @@ export default function Certifications() {
                 <div
                   key={`${cert.name}-${i}`}
                   className="cert-pill"
+                  aria-hidden={i >= courseCerts.length ? true : undefined}
                   style={{
                     '--pill-color': cert.color
                   }}

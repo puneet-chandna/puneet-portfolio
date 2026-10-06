@@ -13,7 +13,7 @@
   --colored-accent-solid: #ff3cac;
   --success: #00ff88;
   --text: #ffffff;
-  --text-dim: #666666;
+  --text-dim: #a0a0a0;
   --dim: #222222;
 }
 
@@ -25,6 +25,8 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 96px;
+  color-scheme: dark;
 }
 
 body {
@@ -225,13 +227,13 @@ textarea:focus-visible,
 /* Grid layouts */
 .grid-2 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 2rem;
 }
 
 .grid-3 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: 1.5rem;
 }
 
@@ -351,6 +353,8 @@ textarea:focus-visible,
   color: var(--text-dim);
   font-size: 0.95rem;
 }
+
+.timeline-desc + .timeline-desc { margin-top: 1rem; }
 
 /* Projects */
 .project-card {
@@ -486,7 +490,6 @@ textarea:focus-visible,
 
 .form-group input:focus,
 .form-group textarea:focus {
-  outline: none;
   border-color: var(--primary);
 }
 
@@ -523,7 +526,7 @@ textarea:focus-visible,
   );
   border: 1px solid var(--primary);
   border-radius: 16px;
-  padding: 3rem;
+  padding: clamp(20px, 4vw, 48px);
   text-align: center;
   margin-top: 4rem;
 }
@@ -533,10 +536,10 @@ textarea:focus-visible,
   align-items: center;
   gap: 1rem;
   background: var(--bg-dark);
-  padding: 1rem 2rem;
+  padding: 1rem clamp(12px, 3vw, 32px);
   border-radius: 8px;
   font-family: "Fira Code", monospace;
-  font-size: 1.25rem;
+  font-size: clamp(0.9rem, 3.5vw, 1.25rem);
   color: var(--primary);
   margin-top: 1.5rem;
 }
@@ -590,7 +593,7 @@ textarea:focus-visible,
 
 .nav-links {
   display: flex;
-  gap: 2rem;
+  gap: clamp(1rem, 2vw, 2rem);
   list-style: none;
 }
 
@@ -660,7 +663,7 @@ textarea:focus-visible,
   color: var(--primary);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 960px) {
   .nav-links {
     display: none;
   }
@@ -678,6 +681,7 @@ textarea:focus-visible,
 
 /* Certifications — Spotlight + Marquee */
 .cert-spotlight {
+  color: var(--text);
   position: relative;
   border-radius: 20px;
   padding: 2px;
@@ -805,7 +809,8 @@ textarea:focus-visible,
   animation: marqueeScroll 30s linear infinite;
 }
 
-.cert-marquee-container:hover .cert-marquee-track {
+.cert-marquee-container:hover .cert-marquee-track,
+.cert-marquee-container:focus-within .cert-marquee-track {
   animation-play-state: paused;
 }
 
@@ -922,31 +927,32 @@ textarea:focus-visible,
   box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
 }
 
-/* Loader */
-.loader {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--bg-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
 
-.loader-spinner {
-  width: 50px;
-  height: 50px;
-  border: 3px solid var(--dim);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
+/* Functional navigation and feedback. */
+.contact-intro { max-width: 60ch; margin: -1rem auto 2rem; color: var(--text-dim); }
+.contact-intro a { color: var(--text); overflow-wrap: anywhere; }
+.copy-status { min-height: 1.5rem; margin-top: 1rem; font-size: 0.85rem; color: var(--text-dim); }
+.nav-identity { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.portrait-button { display: flex; justify-content: center; align-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
+.portrait-button img { border-radius: 50%; object-fit: cover; border: 1px solid #777; }
+.mobile-menu[hidden] { display: none; }
+.photo-dialog { margin: auto; padding: 16px; max-width: min(90vw, 640px); max-height: 90svh; background: transparent; border: 0; overflow: visible; }
+.photo-dialog::backdrop { background: rgba(0, 0, 0, 0.92); }
+.photo-dialog img { display: block; width: 100%; height: auto; max-height: 80svh; object-fit: contain; border-radius: 12px; }
+.photo-close { position: absolute; top: 0; right: 0; width: 44px; height: 44px; border: 1px solid #666; border-radius: 50%; background: #191919; color: #fff; font-size: 24px; cursor: pointer; }
+body:has(.photo-dialog[open]) { overflow: hidden; }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+button:disabled { opacity: 0.65; cursor: wait; }
+input::placeholder, textarea::placeholder { color: var(--text-dim); opacity: 1; }
+@media (max-width: 480px) {
+  .navbar { padding-inline: 16px; }
+  .navbar .logo { font-size: 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .cert-marquee-container { overflow: visible; mask-image: none; -webkit-mask-image: none; }
+  .cert-marquee-track { width: auto; flex-wrap: wrap; }
+  .cert-pill[aria-hidden="true"] { display: none; }
+  .social-links a:hover, .cert-spotlight:hover .cert-badge-img { transform: none; }
 }

@@ -9,11 +9,11 @@ function seededRandom(seed) {
   return x - Math.floor(x)
 }
 
-export default function GlowingOrbs({ count = 8 }) {
+export default function GlowingOrbs({ count = 8, animated = true }) {
   const groupRef = useRef()
 
   useFrame((state) => {
-    if (groupRef.current) {
+    if (animated && groupRef.current) {
       groupRef.current.rotation.y = state.clock.elapsedTime * 0.1
     }
   })
@@ -42,6 +42,7 @@ export default function GlowingOrbs({ count = 8 }) {
       {orbs.map((orb, i) => (
         <Float
           key={i}
+          enabled={animated}
           speed={orb.speed}
           rotationIntensity={0.5}
           floatIntensity={2}

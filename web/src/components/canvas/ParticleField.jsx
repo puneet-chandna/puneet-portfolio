@@ -8,7 +8,7 @@ function seededRandom(seed) {
   return x - Math.floor(x)
 }
 
-export default function ParticleField({ count = 2000 }) {
+export default function ParticleField({ count = 2000, animated = true }) {
   const mesh = useRef()
   
   const particles = useMemo(() => {
@@ -40,7 +40,7 @@ export default function ParticleField({ count = 2000 }) {
   }, [count])
 
   useFrame((state) => {
-    if (mesh.current) {
+    if (animated && mesh.current) {
       mesh.current.rotation.y = state.clock.elapsedTime * 0.02
       mesh.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.1) * 0.1
     }

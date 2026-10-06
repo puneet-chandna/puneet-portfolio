@@ -2,9 +2,9 @@ import {
   SiPython, SiJavascript, SiGo, SiCplusplus, SiReact, 
   SiNodedotjs, SiNextdotjs, SiMongodb, SiPostgresql, 
   SiDocker, SiLinux, SiGit,
-  SiThreedotjs, SiPytorch, SiGooglecloud
+  SiPytorch, SiGooglecloud
 } from 'react-icons/si'
-import { FaAws } from 'react-icons/fa'
+import { FaAws, FaBrain, FaRobot } from 'react-icons/fa'
 
 export const projects = [
   {
@@ -86,7 +86,7 @@ export const experience = [
     title: "Product Developer",
     company: "Hyr.works (Zofa AI Solutions Pvt. Ltd.)",
     date: "Mar 2026 – Present",
-    description: "Developed and stabilized Hyr’s V2 recruiter platform in Next.js, resolving recurring client-reported bugs across frontend and backend workflows. Built the Hyr Live Chrome extension and integrated Hyr Agent APIs. Hardened tenant isolation across Next.js and Java services using Supabase row-level security, JWT authentication, and role-based access controls, with integration testing for authentication and workflow regressions. Rebuilt the FFmpeg recording pipeline with dual recorders, 2-minute chunks, browser buffering, and verified uploads to preserve partial interviews during network failures. Implemented Grafana/Sentry monitoring and Telegram alerts across DigitalOcean production services. Independently researched, designed, and built hyr.works in Next.js, exploring 16+ design prototypes and implementing responsive pages, technical SEO, and generative engine optimization (GEO)."
+    description: "Helped build applied AI systems for Hyr’s recruiting platform, including customizable, multi-stage AI interviews and an AI agent that searches for candidates and adds them to the recruitment pipeline.\n\nIndependently built and deployed Hyr’s interview assessment product to help reviewers evaluate candidate answers and interviewer performance from recorded interviews. Applied assessment research to AI scoring, with transcript excerpts supporting each score. Owned the backend, database, dashboard, scheduling and recording integrations, multilingual transcription and translation, and production deployment.\n\nDeveloped and stabilized Hyr’s V2 recruiter platform in Next.js, resolving recurring client-reported bugs across frontend and backend workflows. Built the Hyr Live Chrome extension and integrated Hyr Agent APIs. Hardened tenant isolation across Next.js and Java services using Supabase row-level security, JWT authentication and role-based access controls, with integration tests for authentication and workflow regressions. Rebuilt the FFmpeg recording pipeline with dual recorders, 2-minute chunks, browser buffering and verified uploads to preserve partial interviews during network failures. Implemented Grafana/Sentry monitoring and Telegram alerts across DigitalOcean production services.\n\nIndependently researched, designed and built hyr.works in Next.js, exploring 16+ design prototypes and implementing responsive pages, technical SEO and generative engine optimization (GEO)."
   },
   {
     id: 0,
@@ -133,7 +133,8 @@ export const skills = [
   { name: "Docker", icon: SiDocker, color: "#2496ED" },
   { name: "Linux", icon: SiLinux, color: "#FCC624" },
   { name: "Git", icon: SiGit, color: "#F05032" },
-  { name: "Three.js", icon: SiThreedotjs, color: "#FFFFFF" },
+  { name: "Applied AI", icon: FaBrain, color: "#C084FC" },
+  { name: "AI Agents", icon: FaRobot, color: "#61DAFB" },
   { name: "ML/PyTorch", icon: SiPytorch, color: "#EE4C2C" }
 ];
 

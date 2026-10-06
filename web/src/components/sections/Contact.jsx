@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { FaCheck } from 'react-icons/fa'
+import { socialLinks } from '../../data/portfolio'
 
 const WEB3FORMS_KEY = import.meta.env.VITE_WEB3FORMS_KEY
 
@@ -8,14 +8,18 @@ export default function Contact() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' })
   const [status, setStatus] = useState('')
   const [copied, setCopied] = useState(false)
+  const [copyError, setCopyError] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (status === 'sending') return
+    if (!WEB3FORMS_KEY) { setStatus('error'); return }
     setStatus('sending')
 
     try {
       const response = await fetch('https://api.web3forms.com/submit', {
         method: 'POST',
+        signal: AbortSignal.timeout(15000),
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           access_key: WEB3FORMS_KEY,
@@ -24,7 +28,8 @@ export default function Contact() {
         })
       })
 
-      if (response.ok) {
+      const result = await response.json()
+      if (response.ok && result.success === true) {
         setStatus('success')
         setFormData({ name: '', email: '', message: '' })
       } else {
@@ -35,59 +40,68 @@ export default function Contact() {
     }
   }
 
-  const copySSH = () => {
-    navigator.clipboard.writeText('ssh puneet.space')
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  const copySSH = async () => {
+    try {
+      await navigator.clipboard.writeText('ssh puneet.space')
+      setCopied(true)
+      setCopyError(false)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setCopied(false)
+      setCopyError(true)
+    }
   }
 
   return (
-    <section className="section" id="contact">
-      <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        viewport={{ once: true }}
-      >
+    <section className="section" id="contact" tabIndex="-1">
+      <div>
         <h2 className="section-title">Get in Touch</h2>
-        
+        <p className="contact-intro">Have a project to discuss? Send a message or email me at{' '}
+          <a href={`mailto:${socialLinks.email}`}>{socialLinks.email}</a>.
+        </p>
+
         <div className="contact-content">
-          <form className="contact-form" onSubmit={handleSubmit}>
+          <form className="contact-form" onSubmit={handleSubmit} aria-busy={status === 'sending'}>
             <div className="form-group">
               <label htmlFor="name">Name</label>
               <input
                 type="text"
                 id="name"
+                name="name"
+                autoComplete="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
                 placeholder="Your name"
               />
             </div>
-            
+
             <div className="form-group">
               <label htmlFor="email">Email</label>
               <input
                 type="email"
                 id="email"
+                name="email"
+                autoComplete="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
                 placeholder="your@email.com"
               />
             </div>
-            
+
             <div className="form-group">
               <label htmlFor="message">Message</label>
               <textarea
                 id="message"
+                name="message"
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 required
                 placeholder="Your message..."
               />
             </div>
-            
+
             <button
               type="submit"
               className="btn btn-primary"
@@ -96,33 +110,29 @@ export default function Contact() {
             >
               {status === 'sending' ? 'Sending...' : 'Send Message'}
             </button>
-            
-            {status === 'success' && (
-              <p className="form-status success-status">
-                <FaCheck aria-hidden="true" />
-                Message sent successfully!
-              </p>
-            )}
-            {status === 'error' && (
-              <p style={{ color: 'var(--accent)', textAlign: 'center', marginTop: '1rem' }}>
-                Something went wrong. Please try again.
-              </p>
-            )}
+
+            <div role="status" aria-live="polite" aria-atomic="true">
+              {status === 'success' && (
+                <p className="form-status success-status">
+                  <FaCheck aria-hidden="true" />
+                  Message sent successfully!
+                </p>
+              )}
+              {status === 'error' && (
+                <p style={{ color: 'var(--accent)', textAlign: 'center', marginTop: '1rem' }}>
+                  Couldn’t confirm delivery. Try again, or use the email link above.
+                </p>
+              )}
+            </div>
           </form>
 
           {/* SSH Banner */}
-          <motion.div
-            className="ssh-banner"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            viewport={{ once: true }}
-          >
+          <div className="ssh-banner">
             <h3 style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}>
               Try my Terminal Portfolio
             </h3>
             <p style={{ color: 'var(--text-dim)' }}>
-              For the full hacker experience, connect via SSH:
+              Explore this portfolio from your terminal:
             </p>
             <div className="ssh-command">
               <span>$ ssh puneet.space</span>
@@ -143,9 +153,12 @@ export default function Contact() {
                 )}
               </button>
             </div>
-          </motion.div>
+            <p className="copy-status" role="status" aria-live="polite">
+              {copyError ? 'Copy failed. Select the command above and copy it manually.' : copied ? 'SSH command copied.' : ''}
+            </p>
+          </div>
         </div>
-      </motion.div>
+      </div>
     </section>
   )
 }

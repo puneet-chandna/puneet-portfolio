@@ -3,7 +3,7 @@ import { socialLinks } from '../../data/portfolio'
 
 export default function Hero() {
   return (
-    <section className="section hero" id="home">
+    <section className="section hero" id="home" tabIndex="-1">
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
